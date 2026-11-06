@@ -46,7 +46,7 @@ export default function LogFood() {
 
   const add = (f: Food) => {
     addEntry({ ...f, meal });
-    haptic.success();
+    haptic.confirm();
     toast(tr('log.added', { name: f.name, meal: tr(`meal.${meal}`) }));
   };
   const addPortion = (food: OffFood, grams: number) => {
@@ -95,7 +95,7 @@ export default function LogFood() {
             {online.state === 'error' ? <Empty icon="cloud-offline-outline" text={tr('log.offline')} /> : null}
             {online.state === 'loading' && !online.items.length ? <Muted style={{ paddingVertical: space.md }}>{tr('log.searching')}</Muted> : null}
             {online.state === 'done' && !online.items.length ? <Empty icon="search-outline" text={tr('log.noMatch')} /> : null}
-            {online.items.slice(0, 12).map((f, i) => <OffRow key={f.code || f.name} food={f} first={i === 0} onPress={() => { haptic.tap(); setPortion(f); }} />)}
+            {online.items.slice(0, 12).map((f, i) => <OffRow key={f.code || f.name} food={f} first={i === 0} onPress={() => { setPortion(f); }} />)}
           </Card>
           <Muted style={{ fontSize: 12 }}>{tr('log.source')}</Muted>
         </View>

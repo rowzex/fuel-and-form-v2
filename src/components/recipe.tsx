@@ -92,7 +92,7 @@ export function RecipeSheet({ recipe, onClose }: { recipe: Recipe | null; onClos
 
   const log = () => {
     addEntry({ name: recipe.title, kcal: recipe.kcal, p: recipe.p, c: recipe.c, f: recipe.f, meal: chosen, img: recipe.mainIngredient });
-    haptic.success();
+    haptic.confirm();
     toast(tr('recipe.logged', { name: recipe.title, meal: tr(`meal.${chosen}`) }));
     setMeal(null);
     onClose();

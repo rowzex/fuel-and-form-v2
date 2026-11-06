@@ -8,7 +8,7 @@ import { Tabs } from 'expo-router/js-tabs';
 import { View } from 'react-native';
 import { SafeAreaProvider, useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { haptic, ToastProvider } from '../components/motion';
+import { ToastProvider } from '../components/motion';
 import { Onboarding } from '../components/onboarding';
 import type { IconName } from '../components/ui';
 import { StoreProvider, useStore } from '../lib/store';
@@ -46,7 +46,6 @@ function Gate({ fontsReady }: { fontsReady: boolean }) {
   const hidden = { tabBarButton: () => null, tabBarItemStyle: { display: 'none' as const } };
   return (
     <Tabs
-      screenListeners={{ tabPress: () => haptic.tap() }}
       screenOptions={({ route }) => ({
         headerShown: false,
         animation: 'shift',

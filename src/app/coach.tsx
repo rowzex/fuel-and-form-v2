@@ -2,7 +2,7 @@ import { router, useFocusEffect } from 'expo-router';
 import { useCallback, useRef, useState } from 'react';
 import { Pressable, ScrollView, ScrollViewInstance, Text, View } from 'react-native';
 
-import { FadeIn, haptic, TypingDots } from '../components/motion';
+import { FadeIn, TypingDots } from '../components/motion';
 import { RecipeCard, RecipeSheet } from '../components/recipe';
 import { Bubble, Button, Header, Icon, IconButton, Input, Muted, Screen } from '../components/ui';
 import { AI_SUPPORTED, loadApiKey } from '../lib/ai';
@@ -30,8 +30,7 @@ export default function Coach() {
   const ask = async (q: string) => {
     const question = q.trim();
     if (busy || !question) return;
-    haptic.tap();
-    setText('');
+        setText('');
     setError('');
     const key = answerKey(question, profile, days, date, lang ?? 'en');
     const same = coach.answers[key];
@@ -43,7 +42,6 @@ export default function Coach() {
     try {
       const answer = await askCoach(question, { apiKey, profile, days, date, history: coach.chat, suggested: coach.suggested, usedTips: coach.usedTips, language: LANG_FOR_AI[lang ?? 'en'] });
       recordAnswer(question, key, answer);
-      haptic.success();
     } catch (e) {
       setError(e instanceof CoachError ? tr(`err.${e.code}`) : tr('err.other'));
       setText(question);
@@ -84,7 +82,7 @@ export default function Coach() {
                 <Bubble role={m.role} text={m.content} />
                 {m.recipes?.length ? (
                   <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: space.md, paddingLeft: 36 }}>
-                    {m.recipes.map((r) => <RecipeCard key={r.id} recipe={r} width={188} onPress={() => { haptic.tap(); setOpen(r); }} />)}
+                    {m.recipes.map((r) => <RecipeCard key={r.id} recipe={r} width={188} onPress={() => { setOpen(r); }} />)}
                   </ScrollView>
                 ) : null}
               </View>

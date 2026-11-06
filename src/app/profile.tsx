@@ -121,7 +121,7 @@ function Options<T extends string | number>({ value, options, onChange }: { valu
         const on = o.value === value;
         return (
           <Pressable
-            key={String(o.value)} onPress={() => { haptic.tap(); onChange(o.value); }} accessibilityRole="radio" accessibilityState={{ checked: on }}
+            key={String(o.value)} onPress={() => { onChange(o.value); }} accessibilityRole="radio" accessibilityState={{ checked: on }}
             style={({ pressed }) => ({
               minHeight: 52, paddingHorizontal: space.md, borderRadius: radius.md, borderWidth: 1.5, flexDirection: 'row', alignItems: 'center', gap: space.md,
               borderColor: on ? t.accent : t.line, backgroundColor: on ? t.accentSoft : pressed ? t.raised : 'transparent',
@@ -169,7 +169,7 @@ function AiCoachCard() {
     await saveApiKey(key);
     setDraft('');
     setHasKey(true);
-    haptic.success();
+    haptic.confirm();
     toast(tr('ai.isOn'));
   };
 

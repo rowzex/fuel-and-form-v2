@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Pressable, ScrollView, Text, View } from 'react-native';
 
-import { FadeIn, haptic } from '../components/motion';
+import { FadeIn } from '../components/motion';
 import { MacroPills, RecipePhoto, RecipeSheet } from '../components/recipe';
 import { Card, Chip, Empty, Header, Icon, IconName, MEAL_ICON, Muted, Screen } from '../components/ui';
 import { Meal, MEALS, targets, totals } from '../lib/model';
@@ -52,7 +52,7 @@ export default function Recipes() {
       ) : (
         list.map((r, i) => (
           <FadeIn key={`${filter}-${r.id}`} delay={Math.min(i, 6) * 40}>
-            <Pressable onPress={() => { haptic.tap(); setOpen(r); }} accessibilityRole="button" accessibilityLabel={`${r.title}, ${r.kcal} ${tr('kcal')}`}>
+            <Pressable onPress={() => { setOpen(r); }} accessibilityRole="button" accessibilityLabel={`${r.title}, ${r.kcal} ${tr('kcal')}`}>
               {({ pressed }) => (
                 <View style={{ backgroundColor: t.surface, borderRadius: radius.lg, borderWidth: 1, borderColor: t.line, overflow: 'hidden', opacity: pressed ? 0.88 : 1 }}>
                   <View>

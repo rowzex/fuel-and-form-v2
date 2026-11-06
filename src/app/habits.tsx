@@ -26,7 +26,7 @@ export default function Habits() {
   const submit = () => {
     if (!name.trim()) return;
     addHabit(name.trim());
-    haptic.success();
+    haptic.confirm();
     toast(tr('habits.added'));
     setName('');
   };
@@ -76,9 +76,9 @@ export default function Habits() {
                 disabled={!!h.auto}
                 onPress={() => {
                   if (!on) {
-                    haptic.success();
+                    haptic.toggle(true);
                     if (s + 1 >= 2) toast(tr('habits.streak', { n: s + 1, name: label }));
-                  } else haptic.soft();
+                  } else haptic.toggle(false);
                   toggleHabit(h.id);
                 }}
                 style={({ pressed }) => ({
@@ -101,7 +101,7 @@ export default function Habits() {
                 </View>
               </View>
               {editing ? (
-                <IconButton icon="trash-outline" label={`${tr('delete')} ${label}`} onPress={() => { haptic.soft(); removeHabit(h.id); }} />
+                <IconButton icon="trash-outline" label={`${tr('delete')} ${label}`} onPress={() => { haptic.toggle(false); removeHabit(h.id); }} />
               ) : (
                 <Pop trigger={s}>
                   <View style={{ alignItems: 'center', minWidth: 44 }}>

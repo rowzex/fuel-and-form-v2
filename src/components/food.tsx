@@ -111,11 +111,10 @@ export function BarcodeScanner({ open, onClose, onFound }: { open: boolean; onCl
   const onScan = async ({ data }: { data: string }) => {
     if (busy.current || !/^\d{8,14}$/.test(data)) return;
     busy.current = true;
-    haptic.tap();
-    setStatus({ kind: 'looking', code: data });
+        setStatus({ kind: 'looking', code: data });
     try {
       const food = await productByCode(data, lang ?? 'en');
-      if (food) { haptic.success(); onFound(food); return; }
+      if (food) { haptic.confirm(); onFound(food); return; }
       setStatus({ kind: 'missing', code: data });
     } catch {
       setStatus({ kind: 'error', code: data });

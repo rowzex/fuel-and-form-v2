@@ -31,7 +31,7 @@ function LanguageStep({ onNext }: { onNext: () => void }) {
   const t = useTheme();
   const { lang, setLang, t: tr } = useStore();
   const [picked, setPicked] = useState<Lang>(lang ?? deviceLang());
-  const choose = (l: Lang) => { haptic.tap(); setPicked(l); setLang(l); };
+  const choose = (l: Lang) => { setPicked(l); setLang(l); };
   return (
     <Screen>
       <FadeIn>
@@ -88,7 +88,7 @@ function AccountStep({ onBack }: { onBack: () => void }) {
     setBusy(true);
     try {
       await sendCode(email, name);
-      haptic.success();
+      haptic.confirm();
       setCode('');
       setSentTo(email.trim().toLowerCase());
     } catch (e) {
@@ -104,7 +104,7 @@ function AccountStep({ onBack }: { onBack: () => void }) {
     setBusy(true);
     try {
       const acc = await verifyCode(sentTo, code, name);
-      haptic.success();
+      haptic.celebrate();
       signIn(acc);
     } catch (e) {
       fail(e);
@@ -113,7 +113,7 @@ function AccountStep({ onBack }: { onBack: () => void }) {
     }
   };
 
-  const skip = () => { haptic.tap(); signIn(account?.mode === 'cloud' ? account : GUEST); };
+  const skip = () => { signIn(account?.mode === 'cloud' ? account : GUEST); };
 
   const errorBox = error ? (
     <View style={{ flexDirection: 'row', gap: space.sm, alignItems: 'center', backgroundColor: t.warnSoft, borderRadius: radius.md, padding: space.md }} accessibilityLiveRegion="polite">

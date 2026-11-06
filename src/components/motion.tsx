@@ -7,11 +7,35 @@ import { ease, motion, radius, type, useTheme } from '../theme';
 
 const native = Platform.OS !== 'web';
 
-/** Light haptic taps; silently does nothing where unsupported. */
+/**
+ * Haptics, used sparingly so each one means something (a buzz on every tap feels sloppy).
+ * Plain taps, tabs, chips and navigation have none: the press animation is the feedback.
+ * - toggle: a habit or water glass switched on or off (one light, crisp tick)
+ * - confirm: something was added or saved (one firm tick)
+ * - celebrate: a goal was reached (the success pattern, kept rare)
+ * Android uses its native haptic effects, which are crisper than the vibration motor.
+ */
+const android = Platform.OS === 'android';
+const quiet = () => {};
 export const haptic = {
-  tap: () => native && Haptics.selectionAsync().catch(() => {}),
-  success: () => native && Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success).catch(() => {}),
-  soft: () => native && Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light).catch(() => {}),
+  toggle: (on = true) => {
+    if (!native) return;
+    (android
+      ? Haptics.performAndroidHapticsAsync(on ? Haptics.AndroidHaptics.Toggle_On : Haptics.AndroidHaptics.Toggle_Off)
+      : Haptics.impactAsync(on ? Haptics.ImpactFeedbackStyle.Light : Haptics.ImpactFeedbackStyle.Soft)
+    ).catch(quiet);
+  },
+  confirm: () => {
+    if (!native) return;
+    (android ? Haptics.performAndroidHapticsAsync(Haptics.AndroidHaptics.Confirm) : Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Rigid)).catch(quiet);
+  },
+  celebrate: () => {
+    if (!native) return;
+    (android
+      ? Haptics.performAndroidHapticsAsync(Haptics.AndroidHaptics.Confirm)
+      : Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success)
+    ).catch(quiet);
+  },
 };
 
 export let reduceMotion = false;

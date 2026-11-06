@@ -2,7 +2,7 @@ import { router } from 'expo-router';
 import { useState } from 'react';
 import { ScrollView, Text, View } from 'react-native';
 
-import { FadeIn, haptic, PressScale } from '../components/motion';
+import { FadeIn, PressScale } from '../components/motion';
 import { FoodThumb, RecipeCard, RecipeSheet } from '../components/recipe';
 import { Bubble, Button, CalorieRing, Card, Empty, Header, Icon, IconButton, MacroBar, MEAL_ICON, Muted, plain, Screen, styles } from '../components/ui';
 import { habitText, LOCALE } from '../lib/i18n';
@@ -76,7 +76,7 @@ export default function Calendar() {
             return (
               <View key={k} style={{ width: `${100 / 7}%`, aspectRatio: 1, padding: 3 }}>
                 <PressScale
-                  disabled={future} onPress={() => { haptic.tap(); setSelected(k); }} accessibilityRole="button" accessibilityLabel={k} accessibilityState={{ selected: on }}
+                  disabled={future} onPress={() => { setSelected(k); }} accessibilityRole="button" accessibilityLabel={k} accessibilityState={{ selected: on }}
                   style={{
                     flex: 1, borderRadius: radius.sm, alignItems: 'center', justifyContent: 'center', gap: 3,
                     backgroundColor: on ? t.ink : s ? s.bg : 'transparent', opacity: future ? 0.3 : 1,
@@ -185,7 +185,7 @@ function DayDetail({ k, onOpenRecipe, onOpenDay }: { k: string; onOpenRecipe: (r
               <Bubble role={msg.role} text={msg.content} />
               {msg.recipes?.length ? (
                 <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: space.md }}>
-                  {msg.recipes.map((r) => <RecipeCard key={r.id} recipe={r} width={160} onPress={() => { haptic.tap(); onOpenRecipe(r); }} />)}
+                  {msg.recipes.map((r) => <RecipeCard key={r.id} recipe={r} width={160} onPress={() => { onOpenRecipe(r); }} />)}
                 </ScrollView>
               ) : null}
             </View>

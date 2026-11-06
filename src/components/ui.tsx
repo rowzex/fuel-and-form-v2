@@ -11,7 +11,7 @@ import { LOCALE } from '../lib/i18n';
 import { dateKey, Meal, shiftKey } from '../lib/model';
 import { useStore } from '../lib/store';
 import { ease, radius, space, TOUCH, type, useTheme } from '../theme';
-import { haptic, PressScale, reduceMotion } from './motion';
+import { PressScale, reduceMotion } from './motion';
 
 export type IconName = ComponentProps<typeof Ionicons>['name'];
 
@@ -137,7 +137,7 @@ export function Button({ label, onPress, kind = 'primary', small, disabled, icon
   return (
     <PressScale
       accessibilityRole="button" accessibilityLabel={label} accessibilityState={{ disabled }}
-      onPress={() => { haptic.tap(); onPress(); }} disabled={disabled} hitSlop={small ? 6 : 0}
+      onPress={() => { onPress(); }} disabled={disabled} hitSlop={small ? 6 : 0}
       style={[styles.btn, small && styles.btnSmall, { backgroundColor: bg, opacity: disabled ? 0.45 : 1 }, style]}
     >
       {icon ? <Icon name={icon} size={small ? 16 : 20} color={fg} /> : null}
@@ -152,7 +152,7 @@ export function IconButton({ icon, label, onPress, disabled, tone = 'plain' }: {
   return (
     <PressScale
       accessibilityRole="button" accessibilityLabel={label} accessibilityState={{ disabled }} disabled={disabled}
-      onPress={() => { haptic.tap(); onPress(); }}
+      onPress={() => { onPress(); }}
       style={{
         width: TOUCH, height: TOUCH, borderRadius: radius.pill, alignItems: 'center', justifyContent: 'center',
         backgroundColor: tone === 'filled' ? t.accent : t.surface, borderWidth: tone === 'filled' ? 0 : 1, borderColor: t.line, opacity: disabled ? 0.35 : 1,
@@ -168,7 +168,7 @@ export function LinkButton({ label, onPress }: { label: string; onPress: () => v
   const t = useTheme();
   return (
     <Pressable
-      onPress={() => { haptic.tap(); onPress(); }} accessibilityRole="link" accessibilityLabel={plain(label)} hitSlop={12}
+      onPress={() => { onPress(); }} accessibilityRole="link" accessibilityLabel={plain(label)} hitSlop={12}
       style={({ pressed }) => ({ flexDirection: 'row', alignItems: 'center', gap: 2, opacity: pressed ? 0.6 : 1, minHeight: 32 })}
     >
       <Text style={[type.label, { color: t.accent }]}>{plain(label)}</Text>
@@ -182,7 +182,7 @@ export function Chip({ label, on, onPress, icon }: { label: string; on: boolean;
   const t = useTheme();
   return (
     <Pressable
-      onPress={() => { haptic.tap(); onPress(); }} accessibilityRole="button" accessibilityState={{ selected: on }} hitSlop={4}
+      onPress={() => { onPress(); }} accessibilityRole="button" accessibilityState={{ selected: on }} hitSlop={4}
       style={({ pressed }) => ({
         minHeight: 40, paddingHorizontal: space.lg, borderRadius: radius.pill, flexDirection: 'row', alignItems: 'center', gap: 6,
         backgroundColor: on ? t.ink : t.surface, borderWidth: 1, borderColor: on ? t.ink : t.line, opacity: pressed ? 0.8 : 1,

@@ -68,7 +68,7 @@ export default function Today() {
                   accessibilityRole="button" accessibilityLabel={tr('today.waterSet', { n: i + 1 })} accessibilityState={{ selected: full }}
                   onPress={() => {
                     const next = day.water === i + 1 ? i : i + 1;
-                    next === profile.waterGoal ? haptic.success() : haptic.soft();
+                    if (next === profile.waterGoal) haptic.celebrate(); else haptic.toggle(next > day.water);
                     setWater(next);
                   }}
                   style={{ height: 48, borderRadius: radius.md, alignItems: 'center', justifyContent: 'center', backgroundColor: full ? t.waterSoft : t.surface }}
@@ -110,7 +110,7 @@ export default function Today() {
                       <Text style={[type.number, { fontSize: 16, color: t.ink }]}>{Math.round(x.kcal)}</Text>
                       <Pressable
                         accessibilityRole="button" accessibilityLabel={tr('today.remove', { name: x.name })} hitSlop={10}
-                        onPress={() => { haptic.soft(); removeEntry(x.id); }}
+                        onPress={() => { haptic.toggle(false); removeEntry(x.id); }}
                         style={({ pressed }) => ({ width: 32, height: 32, borderRadius: 16, alignItems: 'center', justifyContent: 'center', backgroundColor: pressed ? t.raised : 'transparent' })}
                       >
                         <Icon name="close" size={18} color={t.muted} />
@@ -130,7 +130,7 @@ export default function Today() {
           <LinkButton label={tr('today.allRecipes')} onPress={() => router.push('/recipes')} />
         </View>
         <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: space.md, paddingHorizontal: space.lg }} style={{ marginHorizontal: -space.lg }}>
-          {ideas.map((r) => <RecipeCard key={r.id} recipe={r} width={176} onPress={() => { haptic.tap(); setOpen(r); }} />)}
+          {ideas.map((r) => <RecipeCard key={r.id} recipe={r} width={176} onPress={() => { setOpen(r); }} />)}
         </ScrollView>
       </View>
       <RecipeSheet recipe={open} onClose={() => setOpen(null)} />
