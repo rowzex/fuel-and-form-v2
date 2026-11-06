@@ -30,7 +30,7 @@ const en = {
   'ring.left': 'KCAL LEFT', 'ring.over': 'KCAL OVER',
   protein: 'Protein', carbs: 'Carbs', fat: 'Fat', kcal: 'kcal', min: 'min', done: 'Done', edit: 'Edit', delete: 'Delete', add: 'Add', save: 'Save',
 
-  'today.targetsLink': 'My targets & AI coach ›', 'today.fuel': 'Fuel', 'today.target': 'Target {n} kcal', 'today.eaten': 'eaten', 'today.burn': 'burn estimate', 'today.items': 'items',
+  'today.goal': 'Goal', 'today.targetsLink': 'My targets & AI coach ›', 'today.fuel': 'Fuel', 'today.target': 'Target {n} kcal', 'today.eaten': 'eaten', 'today.burn': 'burn estimate', 'today.items': 'items',
   'today.water': 'Water', 'today.glasses': '{n} / {g} glasses', 'today.waterSet': 'Set water to {n} glasses', 'today.ideas': 'Ideas for you', 'today.allRecipes': 'All recipes ›',
   'today.meals': 'Meals', 'today.nothing': 'Nothing logged yet.', 'today.remove': 'Remove {name}',
 
@@ -94,7 +94,7 @@ const fr: Dict = {
   'ring.left': 'KCAL RESTANTES', 'ring.over': 'KCAL EN TROP',
   protein: 'Protéines', carbs: 'Glucides', fat: 'Lipides', kcal: 'kcal', min: 'min', done: 'OK', edit: 'Modifier', delete: 'Supprimer', add: 'Ajouter', save: 'Enregistrer',
 
-  'today.targetsLink': 'Mes objectifs et coach IA ›', 'today.fuel': 'Énergie', 'today.target': 'Objectif {n} kcal', 'today.eaten': 'mangées', 'today.burn': 'dépense estimée', 'today.items': 'aliments',
+  'today.goal': 'Objectif', 'today.targetsLink': 'Mes objectifs et coach IA ›', 'today.fuel': 'Énergie', 'today.target': 'Objectif {n} kcal', 'today.eaten': 'mangées', 'today.burn': 'dépense estimée', 'today.items': 'aliments',
   'today.water': 'Eau', 'today.glasses': '{n} / {g} verres', 'today.waterSet': "Mettre l'eau à {n} verres", 'today.ideas': 'Idées pour vous', 'today.allRecipes': 'Toutes les recettes ›',
   'today.meals': 'Repas', 'today.nothing': 'Rien pour le moment.', 'today.remove': 'Retirer {name}',
 
@@ -155,7 +155,7 @@ const ar: Dict = {
   'ring.left': 'سعرة متبقية', 'ring.over': 'سعرة زائدة',
   protein: 'بروتين', carbs: 'كربوهيدرات', fat: 'دهون', kcal: 'سعرة', min: 'د', done: 'تم', edit: 'تعديل', delete: 'حذف', add: 'إضافة', save: 'حفظ',
 
-  'today.targetsLink': 'أهدافي والمدرب الذكي ›', 'today.fuel': 'الطاقة', 'today.target': 'الهدف {n} سعرة', 'today.eaten': 'مأكولة', 'today.burn': 'الحرق التقديري', 'today.items': 'أصناف',
+  'today.goal': 'الهدف', 'today.targetsLink': 'أهدافي والمدرب الذكي ›', 'today.fuel': 'الطاقة', 'today.target': 'الهدف {n} سعرة', 'today.eaten': 'مأكولة', 'today.burn': 'الحرق التقديري', 'today.items': 'أصناف',
   'today.water': 'الماء', 'today.glasses': '{n} / {g} أكواب', 'today.waterSet': 'اجعل الماء {n} أكواب', 'today.ideas': 'أفكار لك', 'today.allRecipes': 'كل الوصفات ›',
   'today.meals': 'الوجبات', 'today.nothing': 'لم يُسجَّل شيء بعد.', 'today.remove': 'إزالة {name}',
 
@@ -216,7 +216,7 @@ const es: Dict = {
   'ring.left': 'KCAL RESTANTES', 'ring.over': 'KCAL DE MÁS',
   protein: 'Proteína', carbs: 'Carbohidratos', fat: 'Grasa', kcal: 'kcal', min: 'min', done: 'Listo', edit: 'Editar', delete: 'Borrar', add: 'Añadir', save: 'Guardar',
 
-  'today.targetsLink': 'Mis objetivos y coach IA ›', 'today.fuel': 'Energía', 'today.target': 'Objetivo {n} kcal', 'today.eaten': 'consumidas', 'today.burn': 'gasto estimado', 'today.items': 'alimentos',
+  'today.goal': 'Objetivo', 'today.targetsLink': 'Mis objetivos y coach IA ›', 'today.fuel': 'Energía', 'today.target': 'Objetivo {n} kcal', 'today.eaten': 'consumidas', 'today.burn': 'gasto estimado', 'today.items': 'alimentos',
   'today.water': 'Agua', 'today.glasses': '{n} / {g} vasos', 'today.waterSet': 'Poner agua en {n} vasos', 'today.ideas': 'Ideas para ti', 'today.allRecipes': 'Todas las recetas ›',
   'today.meals': 'Comidas', 'today.nothing': 'Nada registrado aún.', 'today.remove': 'Quitar {name}',
 

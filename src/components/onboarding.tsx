@@ -4,15 +4,27 @@ import { Pressable, Text, TextInput, View } from 'react-native';
 import { AuthError, GUEST, sendCode, validEmail, verifyCode } from '../lib/auth';
 import { deviceLang, Lang, LANGS } from '../lib/i18n';
 import { useStore } from '../lib/store';
-import { useTheme } from '../theme';
+import { radius, space, type, useTheme } from '../theme';
 import { FadeIn, haptic, PressScale } from './motion';
-import { Button, Muted, Screen, styles } from './ui';
+import { Button, Field, Icon, Muted, Screen } from './ui';
 
 /** First launch: pick a language, then sign up or log in with email. */
 export function Onboarding() {
   const { lang } = useStore();
   const [step, setStep] = useState<'lang' | 'account'>(lang ? 'account' : 'lang');
   return step === 'lang' ? <LanguageStep onNext={() => setStep('account')} /> : <AccountStep onBack={() => setStep('lang')} />;
+}
+
+function Logo() {
+  const t = useTheme();
+  return (
+    <View style={{ flexDirection: 'row', alignItems: 'center', gap: space.md }}>
+      <View style={{ width: 52, height: 52, borderRadius: radius.md, backgroundColor: t.accent, alignItems: 'center', justifyContent: 'center' }}>
+        <Icon name="leaf" size={28} color={t.accentInk} />
+      </View>
+      <Text style={[type.title, { color: t.ink }]}>Fuel & Form</Text>
+    </View>
+  );
 }
 
 function LanguageStep({ onNext }: { onNext: () => void }) {
@@ -23,27 +35,37 @@ function LanguageStep({ onNext }: { onNext: () => void }) {
   return (
     <Screen>
       <FadeIn>
-        <View style={{ gap: 6, marginTop: 24 }}>
-          <Text style={{ color: t.accent, fontSize: 34, fontWeight: '900' }}>Fuel & Form</Text>
-          <Text style={[styles.brand, { color: t.ink }]}>{tr('ob.chooseLang')}</Text>
-          <Muted>{tr('ob.langSub')}</Muted>
+        <View style={{ gap: space.xl, marginTop: space.xl }}>
+          <Logo />
+          <View style={{ gap: space.xs }}>
+            <Text style={[type.title, { color: t.ink }]} accessibilityRole="header">{tr('ob.chooseLang')}</Text>
+            <Muted style={{ fontSize: 15 }}>{tr('ob.langSub')}</Muted>
+          </View>
         </View>
       </FadeIn>
-      {LANGS.map((l, i) => {
-        const on = l.code === picked;
-        return (
-          <FadeIn key={l.code} delay={60 + i * 50}>
-            <PressScale
-              onPress={() => choose(l.code)} accessibilityRole="radio" accessibilityState={{ checked: on }}
-              style={{ padding: 16, borderRadius: 12, borderWidth: 2, borderColor: on ? t.accent : t.line, backgroundColor: on ? t.chip : t.surface, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}
-            >
-              <Text style={{ color: t.ink, fontSize: 18, fontWeight: '700' }}>{l.name}</Text>
-              <Text style={{ color: on ? t.accent : t.muted }}>{on ? '✓ ' : ''}{l.hello}</Text>
-            </PressScale>
-          </FadeIn>
-        );
-      })}
-      <Button label={tr('ob.continue')} onPress={() => { setLang(picked); onNext(); }} />
+      <View style={{ gap: space.sm }} accessibilityRole="radiogroup">
+        {LANGS.map((l, i) => {
+          const on = l.code === picked;
+          return (
+            <FadeIn key={l.code} delay={60 + i * 40}>
+              <PressScale
+                onPress={() => choose(l.code)} accessibilityRole="radio" accessibilityState={{ checked: on }} accessibilityLabel={l.name}
+                style={{
+                  minHeight: 64, paddingHorizontal: space.lg, borderRadius: radius.lg, borderWidth: 2, borderColor: on ? t.accent : t.line,
+                  backgroundColor: on ? t.accentSoft : t.surface, flexDirection: 'row', alignItems: 'center', gap: space.md,
+                }}
+              >
+                <View style={{ flex: 1 }}>
+                  <Text style={[type.bodyStrong, { color: t.ink, fontSize: 17 }]}>{l.name}</Text>
+                  <Text style={[type.small, { color: t.muted }]}>{l.hello}</Text>
+                </View>
+                <Icon name={on ? 'checkmark-circle' : 'ellipse-outline'} size={26} color={on ? t.accent : t.line} />
+              </PressScale>
+            </FadeIn>
+          );
+        })}
+      </View>
+      <Button icon="arrow-forward" label={tr('ob.continue')} onPress={() => { setLang(picked); onNext(); }} />
     </Screen>
   );
 }
@@ -57,7 +79,6 @@ function AccountStep({ onBack }: { onBack: () => void }) {
   const [sentTo, setSentTo] = useState('');
   const [error, setError] = useState('');
   const [busy, setBusy] = useState(false);
-  const input = [styles.input, { borderColor: t.line, color: t.ink, backgroundColor: t.surface }];
 
   const fail = (e: unknown) => setError(e instanceof AuthError ? tr(`ob.${e.code}`) : tr('ob.offline'));
 
@@ -94,45 +115,60 @@ function AccountStep({ onBack }: { onBack: () => void }) {
 
   const skip = () => { haptic.tap(); signIn(account?.mode === 'cloud' ? account : GUEST); };
 
+  const errorBox = error ? (
+    <View style={{ flexDirection: 'row', gap: space.sm, alignItems: 'center', backgroundColor: t.warnSoft, borderRadius: radius.md, padding: space.md }} accessibilityLiveRegion="polite">
+      <Icon name="alert-circle-outline" size={20} color={t.warn} />
+      <Text style={[type.small, { color: t.warn, flex: 1 }]}>{error}</Text>
+    </View>
+  ) : null;
+
   return (
     <Screen>
-      <Pressable onPress={onBack} hitSlop={8} style={{ alignSelf: 'flex-start' }}>
-        <Text style={{ color: t.accent, fontWeight: '600' }}>{tr('ob.back')}</Text>
+      <Pressable
+        onPress={onBack} hitSlop={12} accessibilityRole="button" accessibilityLabel={tr('ob.back')}
+        style={({ pressed }) => ({ alignSelf: 'flex-start', flexDirection: 'row', alignItems: 'center', gap: 2, minHeight: 44, opacity: pressed ? 0.6 : 1 })}
+      >
+        <Icon name="chevron-back" size={20} color={t.accent} />
+        <Text style={[type.label, { color: t.accent }]}>{tr('ob.back').replace(/^‹\s*/, '')}</Text>
       </Pressable>
       <FadeIn key={sentTo ? 'code' : 'email'}>
-        <View style={{ gap: 6 }}>
-          <Text style={[styles.brand, { color: t.ink, fontSize: 28 }]}>{tr('ob.title')}</Text>
-          <Muted>{sentTo ? tr('ob.codeSent', { email: sentTo }) : tr('ob.sub')}</Muted>
+        <View style={{ gap: space.md }}>
+          <View style={{ width: 52, height: 52, borderRadius: 26, backgroundColor: t.accentSoft, alignItems: 'center', justifyContent: 'center' }}>
+            <Icon name={sentTo ? 'mail-open-outline' : 'mail-outline'} size={26} color={t.accent} />
+          </View>
+          <Text style={[type.title, { color: t.ink }]} accessibilityRole="header">{tr('ob.title')}</Text>
+          <Muted style={{ fontSize: 15, lineHeight: 22 }}>{sentTo ? tr('ob.codeSent', { email: sentTo }) : tr('ob.sub')}</Muted>
         </View>
       </FadeIn>
       {!sentTo ? (
         <>
-          <TextInput value={name} onChangeText={setName} placeholder={tr('ob.nameOptional')} placeholderTextColor={t.muted} style={input} autoComplete="name" textContentType="name" returnKeyType="next" />
-          <TextInput
-            value={email} onChangeText={setEmail} placeholder={tr('ob.email')} placeholderTextColor={t.muted} style={input}
+          <Field label={tr('ob.nameOptional')} value={name} onChangeText={setName} autoComplete="name" textContentType="name" returnKeyType="next" />
+          <Field
+            label={tr('ob.email')} value={email} onChangeText={setEmail} placeholder="name@example.com"
             autoCapitalize="none" autoCorrect={false} keyboardType="email-address" autoComplete="email" textContentType="emailAddress"
             returnKeyType="send" onSubmitEditing={send}
           />
-          {error ? <Text style={{ color: t.warn, fontWeight: '600' }}>{error}</Text> : null}
-          <Button label={busy ? '…' : tr('ob.sendCode')} onPress={send} disabled={busy} />
+          {errorBox}
+          <Button icon="paper-plane-outline" label={busy ? '…' : tr('ob.sendCode')} onPress={send} disabled={busy} />
         </>
       ) : (
         <>
           <TextInput
-            value={code} onChangeText={(v) => setCode(v.replace(/\D/g, '').slice(0, 6))} placeholder={tr('ob.code')} placeholderTextColor={t.muted}
-            style={[...input, { fontSize: 24, letterSpacing: 8, textAlign: 'center' }]} keyboardType="number-pad" maxLength={6}
-            autoComplete="one-time-code" textContentType="oneTimeCode" autoFocus returnKeyType="go" onSubmitEditing={verify}
+            value={code} onChangeText={(v) => setCode(v.replace(/\D/g, '').slice(0, 6))} placeholder="000000" placeholderTextColor={t.muted}
+            accessibilityLabel={tr('ob.code')}
+            style={[type.number, { fontSize: 30, letterSpacing: 12, textAlign: 'center', color: t.ink, backgroundColor: t.raised, borderRadius: radius.md, paddingVertical: space.lg, borderWidth: 1.5, borderColor: t.accent }]}
+            keyboardType="number-pad" maxLength={6} autoComplete="one-time-code" textContentType="oneTimeCode" autoFocus returnKeyType="go" onSubmitEditing={verify}
           />
-          {error ? <Text style={{ color: t.warn, fontWeight: '600' }}>{error}</Text> : null}
-          <Button label={busy ? '…' : tr('ob.verify')} onPress={verify} disabled={busy || code.length < 6} />
-          <View style={[styles.rowBetween, { paddingHorizontal: 4 }]}>
-            <Pressable onPress={send} disabled={busy} hitSlop={8}><Text style={{ color: t.accent, fontWeight: '600' }}>{tr('ob.resend')}</Text></Pressable>
-            <Pressable onPress={() => { setSentTo(''); setError(''); }} hitSlop={8}><Text style={{ color: t.muted, fontWeight: '600' }}>{tr('ob.changeEmail')}</Text></Pressable>
+          {errorBox}
+          <Button icon="checkmark" label={busy ? '…' : tr('ob.verify')} onPress={verify} disabled={busy || code.length < 6} />
+          <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
+            <Button small kind="ghost" icon="refresh" label={tr('ob.resend')} onPress={send} disabled={busy} />
+            <Button small kind="ghost" label={tr('ob.changeEmail')} onPress={() => { setSentTo(''); setError(''); }} />
           </View>
         </>
       )}
-      <View style={{ height: 8 }} />
-      <Button ghost label={tr('ob.skip')} onPress={skip} />
+      <View style={{ height: 1, backgroundColor: t.line, marginTop: space.sm }} />
+      <Button kind="secondary" label={tr('ob.skip')} onPress={skip} />
       <Muted style={{ fontSize: 12, textAlign: 'center' }}>{tr('ob.skipNote')}</Muted>
     </Screen>
   );

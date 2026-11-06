@@ -1,4 +1,34 @@
-# Fuel & Form
+# Fuel & Form — Version 2
+
+A redesign of [Version 1](https://github.com/rowzex/health-app-) using the
+[UI/UX Pro Max](https://github.com/nextlevelbuilder/ui-ux-pro-max-skill) design skill.
+Same features and data, new look.
+
+![Version 1 vs Version 2](docs/compare-v1-v2.png)
+
+Dark mode: [docs/compare-v1-v2-dark.png](docs/compare-v1-v2-dark.png). Every screen in both themes is in [docs/screens](docs/screens).
+
+## What changed and why
+
+The skill's guidance for a **Calorie & Nutrition Counter** and a **Habit Tracker** drove these choices:
+
+| Area | Version 1 | Version 2 | Skill rule |
+|---|---|---|---|
+| Colour | Red-orange accent | Healthy green primary, macro colours (protein blue, carbs orange, fat yellow), streak amber, near-black dark mode | Product palette for nutrition apps; OLED dark for fitness |
+| Contrast | Not checked | Every text colour ≥ 4.5:1 on its background, in both themes | Accessibility, priority 1 |
+| Type | System font, 10–13 px in places | Plus Jakarta Sans, 16 px body, nothing under 12 px | Base 16 px, bold clean sans |
+| Icons | Emoji and text symbols (🔥 ✓ ◎ ✦ ▦) | One icon family (Ionicons): outline, filled when selected | No emoji as icons, consistent family |
+| Touch | 32–34 px buttons | 48 px minimum, larger hit areas on small links | Touch targets ≥ 44/48 |
+| Tabs | 6 tabs | 5 tabs; Calendar and Targets open from buttons on Today | Bottom nav ≤ 5 |
+| Forms | Placeholder-only fields | Visible labels on every field, inline error boxes | Labels, errors near the field |
+| Layout | Mixed spacing | 4/8 px spacing scale, 20 px card corners, flat cards with no shadows | 8 px rhythm; flat, block-based style |
+| Today | Ring + bars in one card | Green hero block with the ring and goal / eaten / burn, macro card, water drops, a card per meal with its own "+" | Block-based layout, progress circle |
+| Habits | Checkbox list | Done / total ring, best streak, 7-day dots per habit, bigger checkboxes | Streak + daily check-in patterns |
+| Motion | Bouncy springs | Short, consistent timings (150–320 ms), no bounce, respects Reduce Motion | Consistent motion tokens |
+
+Design tokens live in `src/theme.ts`; shared components in `src/components/ui.tsx`.
+
+## About the app
 
 A calorie and habits coach for iOS and Android, built with Expo (React Native) and Expo Router.
 
@@ -7,7 +37,8 @@ A calorie and habits coach for iOS and Android, built with Expo (React Native) a
 - **Recipes**: built-in and saved recipes with photos, ranked for your remaining calories; open one to see ingredients and steps and log it in one tap.
 - **Habits**: daily check-offs with streaks and a 7-day history. Water and protein habits tick themselves.
 - **Coach**: an AI coach (Claude) that reads your day and answers with recipe cards. It doesn't repeat itself: earlier answers and suggested recipes are sent as context, and the same question on the same day returns the same answer. Without an API key it uses built-in tips that rotate.
-- **Targets** (link on Today): calorie and macro targets from age, height, weight, activity and goal (Mifflin-St Jeor), plus the AI coach key.
+- **Calendar** (button on Today): every tracked day with its food, water, habits and coach chats.
+- **Targets** (button on Today): calorie and macro targets from age, height, weight, activity and goal (Mifflin-St Jeor), plus the AI coach key.
 
 Data is stored on the device with AsyncStorage.
 
@@ -22,7 +53,7 @@ Scan the QR code with the Expo Go app on your phone, or press `w` for the web pr
 
 ## AI coach
 
-In the phone app, open **Today → My targets & AI coach** and paste a Claude API key from
+In the phone app, open **Today → the profile button (top right)** and paste a Claude API key from
 console.anthropic.com. The key is kept in the phone's secure storage and sent only to the Claude API
 (`src/lib/ai.ts`). This suits a personal app; before publishing to the app stores, move the call behind
 a small server so users don't need their own key.

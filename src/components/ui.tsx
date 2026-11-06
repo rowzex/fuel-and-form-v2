@@ -1,18 +1,34 @@
-import { ReactNode, RefObject, useEffect, useRef, useState } from 'react';
-import { Animated, Easing, Keyboard, LayoutAnimation, Platform, Pressable, ScrollView, ScrollViewInstance, StyleSheet, Text, TextInput, TextStyle, View, ViewInstance, ViewStyle } from 'react-native';
+import Ionicons from '@expo/vector-icons/Ionicons';
+import { ComponentProps, ReactNode, RefObject, useEffect, useRef, useState } from 'react';
+import {
+  Animated, Easing, Keyboard, LayoutAnimation, Platform, Pressable, ScrollView, ScrollViewInstance, StyleProp, StyleSheet, Text, TextInput,
+  TextInputProps, TextStyle, View, ViewInstance, ViewStyle,
+} from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Svg, { Circle } from 'react-native-svg';
 
 import { LOCALE } from '../lib/i18n';
-import { dateKey, shiftKey } from '../lib/model';
+import { dateKey, Meal, shiftKey } from '../lib/model';
 import { useStore } from '../lib/store';
-import { useTheme } from '../theme';
+import { radius, space, TOUCH, type, useTheme } from '../theme';
 import { haptic, PressScale } from './motion';
+
+export type IconName = ComponentProps<typeof Ionicons>['name'];
+
+/** One icon family (Ionicons) everywhere: outline by default, filled for the selected state. */
+export function Icon({ name, size = 22, color }: { name: IconName; size?: number; color: string }) {
+  return <Ionicons name={name} size={size} color={color} accessibilityElementsHidden importantForAccessibility="no" />;
+}
+
+export const MEAL_ICON: Record<Meal, IconName> = { Breakfast: 'sunny-outline', Lunch: 'fast-food-outline', Dinner: 'moon-outline', Snack: 'nutrition-outline' };
+
+/** Strips the "›" some translated link labels end with; v2 draws a chevron icon instead. */
+export const plain = (s: string) => s.replace(/\s*›\s*$/, '');
 
 const AnimatedCircle = Animated.createAnimatedComponent(Circle);
 
 /** Animates toward `value` whenever it changes. */
-function useTween(value: number, duration = 650) {
+function useTween(value: number, duration = 600) {
   const v = useRef(new Animated.Value(value)).current;
   useEffect(() => {
     Animated.timing(v, { toValue: value, duration, easing: Easing.out(Easing.cubic), useNativeDriver: false }).start();
@@ -73,20 +89,34 @@ export function Screen({ children, scroll = true, onKeyboard }: { children: Reac
             {children}
           </ScrollView>
         ) : (
-          <View style={[styles.screen, { flex: 1, paddingBottom: 12 }]}>{children}</View>
+          <View style={[styles.screen, { flex: 1, paddingBottom: space.md }]}>{children}</View>
         )}
       </View>
     </SafeAreaView>
   );
 }
 
-export function Card({ title, right, children, style }: { title?: string; right?: ReactNode; children: ReactNode; style?: ViewStyle }) {
+/** Screen title row: a small line above, a large title, and actions on the right. */
+export function Header({ title, subtitle, right }: { title: string; subtitle?: string; right?: ReactNode }) {
   const t = useTheme();
   return (
-    <View style={[styles.card, { backgroundColor: t.surface, borderColor: t.line }, style]}>
+    <View style={[styles.rowBetween, { gap: space.md, paddingTop: space.sm }]}>
+      <View style={{ flex: 1, gap: 2 }}>
+        {subtitle ? <Text style={[type.overline, { color: t.muted }]}>{subtitle.toLocaleUpperCase()}</Text> : null}
+        <Text style={[type.title, { color: t.ink }]} accessibilityRole="header">{title}</Text>
+      </View>
+      {right ? <View style={{ flexDirection: 'row', gap: space.sm }}>{right}</View> : null}
+    </View>
+  );
+}
+
+export function Card({ title, right, children, style, tone }: { title?: string; right?: ReactNode; children: ReactNode; style?: StyleProp<ViewStyle>; tone?: 'plain' | 'soft' }) {
+  const t = useTheme();
+  return (
+    <View style={[styles.card, { backgroundColor: tone === 'soft' ? t.raised : t.surface, borderColor: tone === 'soft' ? t.raised : t.line }, style]}>
       {title ? (
-        <View style={styles.cardHead}>
-          <Text style={[styles.cardTitle, { color: t.ink }]}>{title.toUpperCase()}</Text>
+        <View style={[styles.rowBetween, { gap: space.sm }]}>
+          <Text style={[type.h2, { color: t.ink, flexShrink: 1 }]} accessibilityRole="header">{title}</Text>
           {right}
         </View>
       ) : null}
@@ -95,96 +125,198 @@ export function Card({ title, right, children, style }: { title?: string; right?
   );
 }
 
-export function Button({ label, onPress, ghost, small, disabled }: { label: string; onPress: () => void; ghost?: boolean; small?: boolean; disabled?: boolean }) {
+type ButtonKind = 'primary' | 'secondary' | 'ghost' | 'danger';
+
+export function Button({ label, onPress, kind = 'primary', small, disabled, icon, style }: {
+  label: string; onPress: () => void; kind?: ButtonKind; small?: boolean; disabled?: boolean; icon?: IconName; style?: StyleProp<ViewStyle>;
+}) {
   const t = useTheme();
+  const bg = { primary: t.accent, secondary: t.raised, ghost: 'transparent', danger: t.warnSoft }[kind];
+  const fg = { primary: t.accentInk, secondary: t.ink, ghost: t.accent, danger: t.warn }[kind];
   return (
     <PressScale
-      accessibilityRole="button"
-      accessibilityState={{ disabled }}
-      onPress={() => { haptic.tap(); onPress(); }}
-      disabled={disabled}
-      style={[styles.btn, small && styles.btnSmall, { backgroundColor: ghost ? t.chip : t.accent, opacity: disabled ? 0.4 : 1 }]}
+      accessibilityRole="button" accessibilityLabel={label} accessibilityState={{ disabled }}
+      onPress={() => { haptic.tap(); onPress(); }} disabled={disabled} hitSlop={small ? 6 : 0}
+      style={[styles.btn, small && styles.btnSmall, { backgroundColor: bg, opacity: disabled ? 0.45 : 1 }, style]}
     >
-      <Text style={{ color: ghost ? t.ink : t.accentInk, fontWeight: '600', fontSize: small ? 13 : 15 }}>{label}</Text>
+      {icon ? <Icon name={icon} size={small ? 16 : 20} color={fg} /> : null}
+      <Text style={[small ? type.label : type.bodyStrong, { color: fg }]} numberOfLines={1}>{label}</Text>
     </PressScale>
   );
 }
 
-export function Muted({ children, style }: { children: ReactNode; style?: TextStyle }) {
+/** Icon-only control with a 48 px touch target and a spoken label. */
+export function IconButton({ icon, label, onPress, disabled, tone = 'plain' }: { icon: IconName; label: string; onPress: () => void; disabled?: boolean; tone?: 'plain' | 'filled' }) {
   const t = useTheme();
-  return <Text style={[{ color: t.muted, fontSize: 13 }, style]}>{children}</Text>;
+  return (
+    <PressScale
+      accessibilityRole="button" accessibilityLabel={label} accessibilityState={{ disabled }} disabled={disabled}
+      onPress={() => { haptic.tap(); onPress(); }}
+      style={{
+        width: TOUCH, height: TOUCH, borderRadius: radius.pill, alignItems: 'center', justifyContent: 'center',
+        backgroundColor: tone === 'filled' ? t.accent : t.surface, borderWidth: tone === 'filled' ? 0 : 1, borderColor: t.line, opacity: disabled ? 0.35 : 1,
+      }}
+    >
+      <Icon name={icon} size={22} color={tone === 'filled' ? t.accentInk : t.ink} />
+    </PressScale>
+  );
 }
 
-/** Calorie ring: fills toward the target, turns warning colour when over. */
-export function Ring({ value, goal, size = 168 }: { value: number; goal: number; size?: number }) {
+/** Small text link with a trailing chevron. */
+export function LinkButton({ label, onPress }: { label: string; onPress: () => void }) {
   const t = useTheme();
-  const r = 50;
-  const c = 2 * Math.PI * r;
-  const pct = Math.min(1, goal > 0 ? value / goal : 0);
-  const { t: tr } = useStore();
-  const left = Math.round(goal - value);
-  const progress = useTween(pct);
   return (
-    <View style={{ width: size, height: size }}>
-      <Svg width={size} height={size} viewBox="0 0 120 120" style={{ transform: [{ rotate: '-90deg' }] }}>
-        <Circle cx={60} cy={60} r={r} stroke={t.chip} strokeWidth={14} fill="none" />
-        <AnimatedCircle
-          cx={60} cy={60} r={r} fill="none" strokeWidth={14} strokeLinecap="round"
-          stroke={left < 0 ? t.warn : t.accent} strokeDasharray={`${c}`}
-          strokeDashoffset={progress.interpolate({ inputRange: [0, 1], outputRange: [c, 0] })}
-        />
-      </Svg>
-      <View style={[StyleSheet.absoluteFill, styles.center]}>
-        <Text style={[styles.ringNum, { color: t.ink }]}>{Math.abs(left).toLocaleString()}</Text>
-        <Text style={[styles.ringLbl, { color: t.muted }]}>{left >= 0 ? tr('ring.left') : tr('ring.over')}</Text>
-      </View>
+    <Pressable
+      onPress={() => { haptic.tap(); onPress(); }} accessibilityRole="link" accessibilityLabel={plain(label)} hitSlop={12}
+      style={({ pressed }) => ({ flexDirection: 'row', alignItems: 'center', gap: 2, opacity: pressed ? 0.6 : 1, minHeight: 32 })}
+    >
+      <Text style={[type.label, { color: t.accent }]}>{plain(label)}</Text>
+      <Icon name="chevron-forward" size={16} color={t.accent} />
+    </Pressable>
+  );
+}
+
+/** Selectable pill. */
+export function Chip({ label, on, onPress, icon }: { label: string; on: boolean; onPress: () => void; icon?: IconName }) {
+  const t = useTheme();
+  return (
+    <Pressable
+      onPress={() => { haptic.tap(); onPress(); }} accessibilityRole="button" accessibilityState={{ selected: on }} hitSlop={4}
+      style={({ pressed }) => ({
+        minHeight: 40, paddingHorizontal: space.lg, borderRadius: radius.pill, flexDirection: 'row', alignItems: 'center', gap: 6,
+        backgroundColor: on ? t.accent : t.surface, borderWidth: 1, borderColor: on ? t.accent : t.line, opacity: pressed ? 0.8 : 1,
+      })}
+    >
+      {icon ? <Icon name={icon} size={16} color={on ? t.accentInk : t.muted} /> : null}
+      <Text style={[type.label, { color: on ? t.accentInk : t.ink }]}>{label}</Text>
+    </Pressable>
+  );
+}
+
+export function Muted({ children, style }: { children: ReactNode; style?: StyleProp<TextStyle> }) {
+  const t = useTheme();
+  return <Text style={[type.small, { color: t.muted }, style]}>{children}</Text>;
+}
+
+/** Text field with a visible label above it (placeholders alone are not labels). */
+export function Field({ label, style, ...rest }: TextInputProps & { label: string }) {
+  const t = useTheme();
+  const [focus, setFocus] = useState(false);
+  return (
+    <View style={[{ gap: 6 }, style]}>
+      <Text style={[type.caption, { color: t.muted }]}>{label}</Text>
+      <TextInput
+        accessibilityLabel={label} placeholderTextColor={t.muted}
+        {...rest}
+        onFocus={(e) => { setFocus(true); rest.onFocus?.(e); }}
+        onBlur={(e) => { setFocus(false); rest.onBlur?.(e); }}
+        style={[styles.input, { color: t.ink, backgroundColor: t.raised, borderColor: focus ? t.accent : 'transparent' }, noOutline]}
+      />
     </View>
   );
 }
 
+const noOutline = Platform.OS === 'web' ? ({ outlineStyle: 'none' } as unknown as TextStyle) : null;
+
+/** Text box without a label row, for search and chat where an icon or button names it. */
+export function Input({ icon, style, ...rest }: TextInputProps & { icon?: IconName }) {
+  const t = useTheme();
+  const [focus, setFocus] = useState(false);
+  return (
+    <View style={[styles.inputRow, { backgroundColor: t.raised, borderColor: focus ? t.accent : 'transparent' }, style]}>
+      {icon ? <Icon name={icon} size={20} color={t.muted} /> : null}
+      <TextInput
+        placeholderTextColor={t.muted}
+        {...rest}
+        onFocus={(e) => { setFocus(true); rest.onFocus?.(e); }}
+        onBlur={(e) => { setFocus(false); rest.onBlur?.(e); }}
+        style={[type.body, { flex: 1, color: t.ink, paddingVertical: 12 }, noOutline]}
+      />
+    </View>
+  );
+}
+
+/** Progress ring. `on="hero"` sets the colours for drawing on the green hero block. */
+export function Ring({ value, goal, size = 176, stroke = 14, on = 'surface', color, children }: {
+  value: number; goal: number; size?: number; stroke?: number; on?: 'surface' | 'hero'; color?: string; children?: ReactNode;
+}) {
+  const t = useTheme();
+  const r = 60 - stroke / 2;
+  const c = 2 * Math.PI * r;
+  const over = value > goal;
+  const progress = useTween(Math.min(1, goal > 0 ? value / goal : 0));
+  const track = on === 'hero' ? t.heroTrack : t.raised;
+  const fill = color ?? (over ? t.carbs : on === 'hero' ? t.heroInk : t.accent);
+  return (
+    <View style={{ width: size, height: size }}>
+      <Svg width={size} height={size} viewBox="0 0 120 120" style={{ transform: [{ rotate: '-90deg' }] }}>
+        <Circle cx={60} cy={60} r={r} stroke={track} strokeWidth={stroke} fill="none" />
+        <AnimatedCircle
+          cx={60} cy={60} r={r} fill="none" strokeWidth={stroke} strokeLinecap="round" stroke={fill} strokeDasharray={`${c}`}
+          strokeDashoffset={progress.interpolate({ inputRange: [0, 1], outputRange: [c, 0] })}
+        />
+      </Svg>
+      <View style={[StyleSheet.absoluteFill, styles.center]}>{children}</View>
+    </View>
+  );
+}
+
+/** Calorie ring with the number left in the middle. */
+export function CalorieRing({ value, goal, size = 176, on }: { value: number; goal: number; size?: number; on?: 'surface' | 'hero' }) {
+  const t = useTheme();
+  const { t: tr } = useStore();
+  const left = Math.round(goal - value);
+  const ink = on === 'hero' ? t.heroInk : t.ink;
+  const sub = on === 'hero' ? t.heroMuted : t.muted;
+  return (
+    <Ring value={value} goal={goal} size={size} on={on}>
+      <Text style={[type.number, { fontSize: size * 0.2, lineHeight: size * 0.24, color: ink }]}>{Math.abs(left).toLocaleString()}</Text>
+      <Text style={[type.overline, { fontSize: 11, color: sub }]}>{left >= 0 ? tr('ring.left') : tr('ring.over')}</Text>
+    </Ring>
+  );
+}
+
+/** One macro as a horizontal bar with grams eaten / target. */
 export function MacroBar({ label, value, goal, color }: { label: string; value: number; goal: number; color: string }) {
   const t = useTheme();
   const w = useTween(Math.min(100, goal ? (value / goal) * 100 : 0));
   return (
-    <View style={{ gap: 5 }}>
+    <View style={{ gap: 6 }} accessible accessibilityLabel={`${label}: ${Math.round(value)} / ${goal} g`}>
       <View style={styles.rowBetween}>
-        <Text style={{ color: t.ink, fontWeight: '600', fontSize: 13 }}>{label}</Text>
-        <Text style={{ color: t.muted, fontSize: 13 }}>
-          <Text style={{ color: t.ink, fontWeight: '700', fontSize: 15 }}>{Math.round(value)}</Text> / {goal} g
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+          <View style={{ width: 8, height: 8, borderRadius: 4, backgroundColor: color }} />
+          <Text style={[type.label, { color: t.ink }]}>{label}</Text>
+        </View>
+        <Text style={[type.small, { color: t.muted }]}>
+          <Text style={[type.label, { color: t.ink }]}>{Math.round(value)}</Text> / {goal} g
         </Text>
       </View>
-      <View style={[styles.bar, { backgroundColor: t.chip }]}>
-        <Animated.View style={{ width: w.interpolate({ inputRange: [0, 100], outputRange: ['0%', '100%'] }), height: '100%', borderRadius: 4, backgroundColor: color }} />
+      <View style={[styles.bar, { backgroundColor: t.raised }]}>
+        <Animated.View style={{ width: w.interpolate({ inputRange: [0, 100], outputRange: ['0%', '100%'] }), height: '100%', borderRadius: radius.pill, backgroundColor: color }} />
       </View>
     </View>
   );
 }
 
-/** Previous / next day switcher shared by the Today and Habits tabs. */
+/** Title with the day it shows and previous / next day buttons, shared by Today and Habits. */
 export function DayHeader({ title }: { title: string }) {
-  const t = useTheme();
   const { date, setDate, t: tr, lang } = useStore();
   const today = dateKey(new Date());
   const [y, m, d] = date.split('-').map(Number);
   const label =
     date === today ? tr('day.today') : date === shiftKey(today, -1) ? tr('day.yesterday')
-      : new Date(y, m - 1, d).toLocaleDateString(LOCALE[lang ?? 'en'], { weekday: 'short', day: 'numeric', month: 'short' });
+      : new Date(y, m - 1, d).toLocaleDateString(LOCALE[lang ?? 'en'], { weekday: 'long', day: 'numeric', month: 'short' });
   return (
-    <View style={styles.dayHeader}>
-      <Text style={[styles.brand, { color: t.ink }]}>{title}</Text>
-      <View style={styles.dayNav}>
-        <Pressable accessibilityLabel={tr('day.prev')} onPress={() => { haptic.tap(); setDate(shiftKey(date, -1)); }} style={[styles.navBtn, { borderColor: t.line }]}>
-          <Text style={{ color: t.ink, fontSize: 18 }}>‹</Text>
-        </Pressable>
-        <Text style={[styles.dayLabel, { color: t.ink }]}>{label.toLocaleUpperCase()}</Text>
-        <Pressable
-          accessibilityLabel={tr('day.next')} disabled={date >= today} onPress={() => { haptic.tap(); setDate(shiftKey(date, 1)); }}
-          style={[styles.navBtn, { borderColor: t.line, opacity: date >= today ? 0.35 : 1 }]}
-        >
-          <Text style={{ color: t.ink, fontSize: 18 }}>›</Text>
-        </Pressable>
-      </View>
-    </View>
+    <Header
+      title={title}
+      subtitle={label}
+      right={
+        <>
+          <IconButton icon="chevron-back" label={tr('day.prev')} onPress={() => setDate(shiftKey(date, -1))} />
+          <IconButton icon="chevron-forward" label={tr('day.next')} disabled={date >= today} onPress={() => setDate(shiftKey(date, 1))} />
+        </>
+      }
+    />
   );
 }
 
@@ -193,34 +325,47 @@ export function Bubble({ role, text }: { role: 'user' | 'assistant'; text: strin
   const t = useTheme();
   const me = role === 'user';
   return (
-    <View
-      style={{
-        alignSelf: me ? 'flex-end' : 'flex-start', maxWidth: '88%', paddingVertical: 10, paddingHorizontal: 13, borderRadius: 16,
-        borderBottomRightRadius: me ? 4 : 16, borderBottomLeftRadius: me ? 16 : 4,
-        backgroundColor: me ? t.accent : t.surface, borderWidth: me ? 0 : 1, borderColor: t.line,
-      }}
-    >
-      <Text style={{ color: me ? t.accentInk : t.ink, lineHeight: 20 }}>{text}</Text>
+    <View style={{ flexDirection: 'row', gap: space.sm, alignSelf: me ? 'flex-end' : 'flex-start', maxWidth: '90%', alignItems: 'flex-end' }}>
+      {!me ? (
+        <View style={{ width: 28, height: 28, borderRadius: 14, backgroundColor: t.accentSoft, alignItems: 'center', justifyContent: 'center' }}>
+          <Icon name="sparkles" size={15} color={t.accent} />
+        </View>
+      ) : null}
+      <View
+        style={{
+          flexShrink: 1, paddingVertical: 10, paddingHorizontal: 14, borderRadius: 18,
+          borderBottomRightRadius: me ? 6 : 18, borderBottomLeftRadius: me ? 18 : 6,
+          backgroundColor: me ? t.accent : t.surface, borderWidth: me ? 0 : 1, borderColor: t.line,
+        }}
+      >
+        <Text style={[type.body, { fontSize: 15, lineHeight: 22, color: me ? t.accentInk : t.ink }]}>{text}</Text>
+      </View>
+    </View>
+  );
+}
+
+/** Empty state: icon, one line, optional action. */
+export function Empty({ icon, text, action }: { icon: IconName; text: string; action?: ReactNode }) {
+  const t = useTheme();
+  return (
+    <View style={{ alignItems: 'center', gap: space.sm, paddingVertical: space.md }}>
+      <View style={{ width: 44, height: 44, borderRadius: 22, backgroundColor: t.raised, alignItems: 'center', justifyContent: 'center' }}>
+        <Icon name={icon} size={22} color={t.muted} />
+      </View>
+      <Muted style={{ textAlign: 'center' }}>{text}</Muted>
+      {action}
     </View>
   );
 }
 
 export const styles = StyleSheet.create({
-  screen: { padding: 16, gap: 16, paddingBottom: 32 },
-  card: { borderWidth: StyleSheet.hairlineWidth, borderRadius: 12, padding: 16, gap: 12 },
-  cardHead: { flexDirection: 'row', alignItems: 'baseline', justifyContent: 'space-between' },
-  cardTitle: { fontSize: 17, fontWeight: '800', letterSpacing: 1 },
-  btn: { borderRadius: 8, paddingVertical: 10, paddingHorizontal: 14, alignItems: 'center', justifyContent: 'center' },
-  btnSmall: { paddingVertical: 6, paddingHorizontal: 10 },
+  screen: { paddingHorizontal: space.lg, paddingTop: space.sm, gap: space.lg, paddingBottom: space.xxl },
+  card: { borderWidth: 1, borderRadius: radius.lg, padding: space.lg, gap: space.md },
+  btn: { minHeight: TOUCH, borderRadius: radius.md, paddingHorizontal: space.lg, alignItems: 'center', justifyContent: 'center', flexDirection: 'row', gap: space.sm },
+  btnSmall: { minHeight: 36, borderRadius: radius.pill, paddingHorizontal: 14 },
   center: { alignItems: 'center', justifyContent: 'center' },
-  ringNum: { fontSize: 38, fontWeight: '800', fontVariant: ['tabular-nums'] },
-  ringLbl: { fontSize: 11, letterSpacing: 1, marginTop: 2 },
   rowBetween: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
-  bar: { height: 8, borderRadius: 4, overflow: 'hidden' },
-  dayHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
-  brand: { fontSize: 24, fontWeight: '800', letterSpacing: 0.5 },
-  dayNav: { flexDirection: 'row', alignItems: 'center', gap: 8 },
-  navBtn: { width: 34, height: 34, borderRadius: 8, borderWidth: 1, alignItems: 'center', justifyContent: 'center' },
-  dayLabel: { fontWeight: '700', minWidth: 96, textAlign: 'center', letterSpacing: 0.5 },
-  input: { borderWidth: 1, borderRadius: 8, paddingHorizontal: 12, paddingVertical: 10, fontSize: 15 },
+  bar: { height: 10, borderRadius: radius.pill, overflow: 'hidden' },
+  input: { ...type.body, borderWidth: 1.5, borderRadius: radius.md, paddingHorizontal: 14, paddingVertical: 12, minHeight: TOUCH },
+  inputRow: { flexDirection: 'row', alignItems: 'center', gap: space.sm, borderWidth: 1.5, borderRadius: radius.md, paddingHorizontal: 14, minHeight: TOUCH },
 });

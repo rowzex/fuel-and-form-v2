@@ -3,7 +3,7 @@ import { createContext, ReactNode, useCallback, useContext, useEffect, useRef, u
 import { AccessibilityInfo, Animated, Easing, Platform, Pressable, PressableProps, StyleProp, Text, View, ViewStyle } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { useTheme } from '../theme';
+import { motion, radius, type, useTheme } from '../theme';
 
 const native = Platform.OS !== 'web';
 
@@ -21,10 +21,10 @@ AccessibilityInfo.isReduceMotionEnabled?.().then((v) => (reduceMotion = v)).catc
 export function FadeIn({ children, delay = 0, style }: { children: ReactNode; delay?: number; style?: StyleProp<ViewStyle> }) {
   const v = useRef(new Animated.Value(reduceMotion ? 1 : 0)).current;
   useEffect(() => {
-    Animated.timing(v, { toValue: 1, duration: 320, delay, easing: Easing.out(Easing.cubic), useNativeDriver: native }).start();
+    Animated.timing(v, { toValue: 1, duration: motion.slow, delay, easing: Easing.out(Easing.cubic), useNativeDriver: native }).start();
   }, [v, delay]);
   return (
-    <Animated.View style={[style, { opacity: v, transform: [{ translateY: v.interpolate({ inputRange: [0, 1], outputRange: [10, 0] }) }] }]}>
+    <Animated.View style={[style, { opacity: v, transform: [{ translateY: v.interpolate({ inputRange: [0, 1], outputRange: [8, 0] }) }] }]}>
       {children}
     </Animated.View>
   );
@@ -33,11 +33,11 @@ export function FadeIn({ children, delay = 0, style }: { children: ReactNode; de
 /** A Pressable that shrinks slightly while pressed. */
 export function PressScale({ children, style, onPressIn, onPressOut, ...rest }: PressableProps & { style?: StyleProp<ViewStyle>; children: ReactNode }) {
   const scale = useRef(new Animated.Value(1)).current;
-  const to = (value: number) => Animated.spring(scale, { toValue: value, useNativeDriver: native, speed: 40, bounciness: 6 }).start();
+  const to = (value: number) => Animated.spring(scale, { toValue: value, useNativeDriver: native, speed: 50, bounciness: 0 }).start();
   return (
     <Pressable
       {...rest}
-      onPressIn={(e) => { to(0.96); onPressIn?.(e); }}
+      onPressIn={(e) => { to(0.97); onPressIn?.(e); }}
       onPressOut={(e) => { to(1); onPressOut?.(e); }}
     >
       <Animated.View style={[style, { transform: [{ scale }] }]}>{children}</Animated.View>
@@ -75,7 +75,7 @@ export function TypingDots() {
     return () => loops.forEach((l) => l.stop());
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
   return (
-    <View style={{ flexDirection: 'row', gap: 5, padding: 14, alignSelf: 'flex-start', backgroundColor: t.surface, borderRadius: 14, borderWidth: 1, borderColor: t.line }} accessibilityLabel="Coach is typing">
+    <View style={{ flexDirection: 'row', gap: 5, padding: 14, marginLeft: 36, alignSelf: 'flex-start', backgroundColor: t.surface, borderRadius: 18, borderBottomLeftRadius: 6, borderWidth: 1, borderColor: t.line }} accessibilityLabel="Coach is typing">
       {dots.map((d, i) => (
         <Animated.View key={i} style={{ width: 7, height: 7, borderRadius: 4, backgroundColor: t.muted, transform: [{ translateY: d.interpolate({ inputRange: [0, 1], outputRange: [0, -5] }) }] }} />
       ))}
@@ -99,7 +99,7 @@ export function ToastProvider({ children }: { children: ReactNode }) {
       setMsg(m);
       if (timer.current) clearTimeout(timer.current);
       Animated.spring(v, { toValue: 1, useNativeDriver: native, speed: 20, bounciness: 8 }).start();
-      timer.current = setTimeout(() => Animated.timing(v, { toValue: 0, duration: 200, useNativeDriver: native }).start(), 1800);
+      timer.current = setTimeout(() => Animated.timing(v, { toValue: 0, duration: motion.base, useNativeDriver: native }).start(), 2000);
     },
     [v],
   );
@@ -113,8 +113,8 @@ export function ToastProvider({ children }: { children: ReactNode }) {
           opacity: v, transform: [{ translateY: v.interpolate({ inputRange: [0, 1], outputRange: [-20, 0] }) }],
         }}
       >
-        <View style={{ backgroundColor: t.ink, paddingVertical: 10, paddingHorizontal: 16, borderRadius: 12 }} accessibilityLiveRegion="polite">
-          <Text style={{ color: t.bg, fontWeight: '600' }}>{msg}</Text>
+        <View style={{ backgroundColor: t.ink, paddingVertical: 12, paddingHorizontal: 18, borderRadius: radius.pill }} accessibilityLiveRegion="polite">
+          <Text style={[type.label, { color: t.bg }]}>{msg}</Text>
         </View>
       </Animated.View>
     </ToastCtx.Provider>

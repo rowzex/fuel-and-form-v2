@@ -6,26 +6,27 @@ import { ingredientImage, useDishImage } from '../lib/images';
 import { Meal, MEALS } from '../lib/model';
 import { Recipe } from '../lib/recipes';
 import { useStore } from '../lib/store';
-import { useTheme } from '../theme';
+import { radius, space, type, useTheme } from '../theme';
 import { haptic, PressScale, useToast } from './motion';
-import { Button, Muted } from './ui';
+import { Button, Chip, Icon, IconButton, MEAL_ICON, Muted } from './ui';
 
-/** A photo that fades in once loaded and falls back to a tinted tile with a letter. */
-function Photo({ uri, label, size, radius = 12, tint }: { uri: string | null; label: string; size: { width: number | `${number}%`; height: number }; radius?: number; tint?: string }) {
+/** A photo that fades in once loaded and falls back to a tinted tile with a food icon. */
+function Photo({ uri, label, size, radius: r = radius.md, tint }: { uri: string | null; label: string; size: { width: number | `${number}%`; height: number }; radius?: number; tint?: string }) {
   const t = useTheme();
   const [failed, setFailed] = useState(false);
   const fade = useRef(new Animated.Value(0)).current;
   return (
-    <View style={{ ...size, borderRadius: radius, overflow: 'hidden', backgroundColor: tint ?? t.chip, alignItems: 'center', justifyContent: 'center' }}>
-      <Text style={{ color: t.muted, fontWeight: '800', fontSize: Math.min(28, size.height / 3) }}>{label.slice(0, 1).toUpperCase()}</Text>
+    <View style={{ ...size, borderRadius: r, overflow: 'hidden', backgroundColor: tint ?? t.raised, alignItems: 'center', justifyContent: 'center' }}>
+      <Icon name="restaurant-outline" size={Math.min(32, size.height / 2.6)} color={t.muted} />
       {uri && !failed ? (
         <Animated.Image
           source={{ uri }}
-          onLoad={() => Animated.timing(fade, { toValue: 1, duration: 250, useNativeDriver: Platform.OS !== 'web' }).start()}
+          onLoad={() => Animated.timing(fade, { toValue: 1, duration: 220, useNativeDriver: Platform.OS !== 'web' }).start()}
           onError={() => setFailed(true)}
           style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, opacity: fade }}
           resizeMode="cover"
           accessibilityIgnoresInvertColors
+          accessibilityLabel={label}
         />
       ) : null}
     </View>
@@ -33,26 +34,47 @@ function Photo({ uri, label, size, radius = 12, tint }: { uri: string | null; la
 }
 
 export function FoodThumb({ img, name, size = 40 }: { img?: string; name: string; size?: number }) {
-  const t = useTheme();
-  return <Photo uri={img ? ingredientImage(img) : null} label={name} size={{ width: size, height: size }} radius={size / 2} tint={t.surface} />;
+  return <Photo uri={img ? ingredientImage(img) : null} label={name} size={{ width: size, height: size }} radius={size / 2} />;
 }
 
-export function RecipePhoto({ recipe, height, radius = 12 }: { recipe: Recipe; height: number; radius?: number }) {
+export function RecipePhoto({ recipe, height, radius: r = radius.md }: { recipe: Recipe; height: number; radius?: number }) {
   const uri = useDishImage(recipe.imageQuery, recipe.mainIngredient, recipe.title);
-  return <Photo uri={uri} label={recipe.title} size={{ width: '100%', height }} radius={radius} />;
+  return <Photo uri={uri} label={recipe.title} size={{ width: '100%', height }} radius={r} />;
+}
+
+/** Protein / carbs / fat as three small coloured pills. */
+export function MacroPills({ p, c, f }: { p: number; c: number; f: number }) {
+  const t = useTheme();
+  const { t: tr } = useStore();
+  return (
+    <View style={{ flexDirection: 'row', gap: 6, flexWrap: 'wrap' }}>
+      {([[tr('protein'), p, t.protein], [tr('carbs'), c, t.carbs], [tr('fat'), f, t.fat]] as const).map(([l, v, color]) => (
+        <View key={l} style={{ flexDirection: 'row', alignItems: 'center', gap: 5, paddingHorizontal: 10, paddingVertical: 4, borderRadius: radius.pill, backgroundColor: t.raised }}>
+          <View style={{ width: 7, height: 7, borderRadius: 4, backgroundColor: color }} />
+          <Text style={[type.caption, { color: t.ink }]}>{l} {v} g</Text>
+        </View>
+      ))}
+    </View>
+  );
 }
 
 export function RecipeCard({ recipe, onPress, width = 200 }: { recipe: Recipe; onPress: () => void; width?: number }) {
   const t = useTheme();
   const { t: tr } = useStore();
   return (
-    <PressScale onPress={onPress} accessibilityRole="button" accessibilityLabel={`${recipe.title}, ${recipe.kcal} calories`} style={{ width, backgroundColor: t.surface, borderRadius: 14, borderWidth: 1, borderColor: t.line, overflow: 'hidden' }}>
-      <RecipePhoto recipe={recipe} height={width * 0.62} radius={0} />
-      <View style={{ padding: 10, gap: 3 }}>
-        <Text numberOfLines={2} style={{ color: t.ink, fontWeight: '700', fontSize: 14 }}>{recipe.title}</Text>
-        <Text style={{ color: t.muted, fontSize: 12 }}>
-          <Text style={{ color: t.accent, fontWeight: '700' }}>{recipe.kcal} {tr('kcal')}</Text> · {tr('recipe.gProtein', { n: recipe.p })} · {recipe.minutes} {tr('min')}
-        </Text>
+    <PressScale
+      onPress={onPress} accessibilityRole="button" accessibilityLabel={`${recipe.title}, ${recipe.kcal} ${tr('kcal')}`}
+      style={{ width, backgroundColor: t.surface, borderRadius: radius.lg, borderWidth: 1, borderColor: t.line, overflow: 'hidden' }}
+    >
+      <RecipePhoto recipe={recipe} height={width * 0.66} radius={0} />
+      <View style={{ padding: space.md, gap: 6 }}>
+        <Text numberOfLines={2} style={[type.label, { color: t.ink, minHeight: 40 }]}>{recipe.title}</Text>
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: space.sm }}>
+          <Icon name="flame-outline" size={14} color={t.accent} />
+          <Text style={[type.caption, { color: t.ink }]}>{recipe.kcal} {tr('kcal')}</Text>
+          <View style={{ width: 6, height: 6, borderRadius: 3, backgroundColor: t.protein }} />
+          <Text style={[type.caption, { color: t.muted }]}>{recipe.p} g</Text>
+        </View>
       </View>
     </PressScale>
   );
@@ -79,71 +101,95 @@ export function RecipeSheet({ recipe, onClose }: { recipe: Recipe | null; onClos
 
   return (
     <Modal visible animationType="slide" transparent onRequestClose={onClose}>
-      <Pressable style={{ flex: 1, backgroundColor: '#0008' }} onPress={onClose} accessibilityLabel={tr('recipe.close')} />
-      <View style={{ maxHeight: '88%', backgroundColor: t.bg, borderTopLeftRadius: 22, borderTopRightRadius: 22, overflow: 'hidden' }}>
-        <ScrollView contentContainerStyle={{ paddingBottom: insets.bottom + 16 }}>
-          <RecipePhoto recipe={recipe} height={220} radius={0} />
-          <View style={{ padding: 18, gap: 14 }}>
-            <View style={{ gap: 4 }}>
-              <Text style={{ color: t.ink, fontSize: 22, fontWeight: '800' }}>{recipe.title}</Text>
-              <Muted>{tr(`meal.${recipe.meal}`)} · {recipe.minutes} {tr('min')} · {tr('recipe.perServing')}</Muted>
-              {recipe.why ? <Text style={{ color: t.ink, marginTop: 4 }}>{recipe.why}</Text> : null}
+      <Pressable style={{ flex: 1, backgroundColor: '#000000a6' }} onPress={onClose} accessibilityLabel={tr('recipe.close')} />
+      <View style={{ maxHeight: '90%', backgroundColor: t.bg, borderTopLeftRadius: 28, borderTopRightRadius: 28, overflow: 'hidden' }}>
+        <ScrollView contentContainerStyle={{ paddingBottom: insets.bottom + space.lg }}>
+          <View>
+            <RecipePhoto recipe={recipe} height={232} radius={0} />
+            <View style={{ position: 'absolute', top: space.sm, alignSelf: 'center', width: 40, height: 5, borderRadius: 3, backgroundColor: '#ffffffcc' }} />
+            <View style={{ position: 'absolute', top: space.lg, right: space.lg }}>
+              <IconButton icon="close" label={tr('recipe.close')} onPress={onClose} />
+            </View>
+          </View>
+          <View style={{ padding: space.xl - 4, gap: space.xl }}>
+            <View style={{ gap: space.sm }}>
+              <Text style={[type.title, { color: t.ink }]}>{recipe.title}</Text>
+              <View style={{ flexDirection: 'row', gap: space.lg, flexWrap: 'wrap' }}>
+                <MetaInline icon={MEAL_ICON[recipe.meal]} text={tr(`meal.${recipe.meal}`)} />
+                <MetaInline icon="time-outline" text={`${recipe.minutes} ${tr('min')}`} />
+                <MetaInline icon="person-outline" text={tr('recipe.perServing')} />
+              </View>
+              {recipe.why ? (
+                <View style={{ flexDirection: 'row', gap: space.sm, backgroundColor: t.accentSoft, borderRadius: radius.md, padding: space.md }}>
+                  <Icon name="sparkles" size={18} color={t.accent} />
+                  <Text style={[type.small, { color: t.ink, flex: 1 }]}>{recipe.why}</Text>
+                </View>
+              ) : null}
             </View>
 
-            <View style={{ flexDirection: 'row', gap: 8 }}>
-              {[
+            <View style={{ flexDirection: 'row', gap: space.sm }}>
+              {([
                 [String(recipe.kcal), tr('kcal'), t.accent],
                 [`${recipe.p} g`, tr('protein'), t.protein],
                 [`${recipe.c} g`, tr('carbs'), t.carbs],
                 [`${recipe.f} g`, tr('fat'), t.fat],
-              ].map(([v, l, c]) => (
-                <View key={l} style={{ flex: 1, backgroundColor: t.surface, borderRadius: 10, paddingVertical: 10, alignItems: 'center', borderWidth: 1, borderColor: t.line }}>
-                  <Text style={{ color: c, fontWeight: '800', fontSize: 17 }}>{v}</Text>
-                  <Muted style={{ fontSize: 11 }}>{l}</Muted>
+              ] as const).map(([v, l, c]) => (
+                <View key={l} style={{ flex: 1, backgroundColor: t.surface, borderRadius: radius.md, paddingVertical: space.md, alignItems: 'center', gap: 2, borderWidth: 1, borderColor: t.line, borderTopWidth: 4, borderTopColor: c }}>
+                  <Text style={[type.number, { fontSize: 18, color: t.ink }]}>{v}</Text>
+                  <Text style={[type.caption, { color: t.muted }]}>{l}</Text>
                 </View>
               ))}
             </View>
 
-            <View style={{ gap: 6 }}>
-              <Text style={{ color: t.ink, fontWeight: '800', letterSpacing: 1 }}>{tr('recipe.ingredients')}</Text>
+            <View style={{ gap: space.sm }}>
+              <Text style={[type.h2, { color: t.ink }]} accessibilityRole="header">{tr('recipe.ingredients')}</Text>
               {recipe.ingredients.map((x, i) => (
-                <Text key={i} style={{ color: t.ink }}>•  {x}</Text>
-              ))}
-            </View>
-
-            <View style={{ gap: 8 }}>
-              <Text style={{ color: t.ink, fontWeight: '800', letterSpacing: 1 }}>{tr('recipe.steps')}</Text>
-              {recipe.steps.map((x, i) => (
-                <View key={i} style={{ flexDirection: 'row', gap: 10 }}>
-                  <Text style={{ color: t.accent, fontWeight: '800', width: 18 }}>{i + 1}</Text>
-                  <Text style={{ color: t.ink, flex: 1, lineHeight: 20 }}>{x}</Text>
+                <View key={i} style={{ flexDirection: 'row', gap: space.md, alignItems: 'center', paddingVertical: 2 }}>
+                  <View style={{ width: 6, height: 6, borderRadius: 3, backgroundColor: t.accent }} />
+                  <Text style={[type.body, { color: t.ink, flex: 1 }]}>{x}</Text>
                 </View>
               ))}
             </View>
 
-            <View style={{ gap: 8 }}>
+            <View style={{ gap: space.md }}>
+              <Text style={[type.h2, { color: t.ink }]} accessibilityRole="header">{tr('recipe.steps')}</Text>
+              {recipe.steps.map((x, i) => (
+                <View key={i} style={{ flexDirection: 'row', gap: space.md }}>
+                  <View style={{ width: 28, height: 28, borderRadius: 14, backgroundColor: t.accentSoft, alignItems: 'center', justifyContent: 'center' }}>
+                    <Text style={[type.label, { color: t.accent }]}>{i + 1}</Text>
+                  </View>
+                  <Text style={[type.body, { color: t.ink, flex: 1 }]}>{x}</Text>
+                </View>
+              ))}
+            </View>
+
+            <View style={{ gap: space.sm }}>
               <Muted>{tr('recipe.logAs')}</Muted>
-              <View style={{ flexDirection: 'row', gap: 6, flexWrap: 'wrap' }}>
-                {MEALS.map((m) => (
-                  <Pressable
-                    key={m} onPress={() => { haptic.tap(); setMeal(m); }} accessibilityState={{ selected: m === chosen }}
-                    style={{ paddingVertical: 6, paddingHorizontal: 12, borderRadius: 999, borderWidth: 1, borderColor: m === chosen ? t.accent : t.line, backgroundColor: m === chosen ? t.accent : 'transparent' }}
-                  >
-                    <Text style={{ color: m === chosen ? t.accentInk : t.ink, fontWeight: '600', fontSize: 13 }}>{tr(`meal.${m}`)}</Text>
-                  </Pressable>
-                ))}
+              <View style={{ flexDirection: 'row', gap: space.sm, flexWrap: 'wrap' }}>
+                {MEALS.map((m) => <Chip key={m} icon={MEAL_ICON[m]} label={tr(`meal.${m}`)} on={m === chosen} onPress={() => setMeal(m)} />)}
               </View>
             </View>
 
-            <View style={{ flexDirection: 'row', gap: 8 }}>
-              <View style={{ flex: 2 }}><Button label={tr('recipe.logTo', { meal: tr(`meal.${chosen}`) })} onPress={log} /></View>
-              <View style={{ flex: 1 }}>
-                <Button ghost label={isSaved ? tr('recipe.saved') : tr('save')} onPress={() => { haptic.tap(); toggleSaved(recipe); toast(isSaved ? tr('recipe.unsaved') : tr('recipe.savedToast')); }} />
-              </View>
+            <View style={{ flexDirection: 'row', gap: space.sm }}>
+              <Button style={{ flex: 1 }} icon="add-circle-outline" label={tr('recipe.logTo', { meal: tr(`meal.${chosen}`) })} onPress={log} />
+              <Button
+                kind="secondary" icon={isSaved ? 'bookmark' : 'bookmark-outline'} label={isSaved ? tr('recipe.saved') : tr('save')}
+                onPress={() => { toggleSaved(recipe); toast(isSaved ? tr('recipe.unsaved') : tr('recipe.savedToast')); }}
+              />
             </View>
           </View>
         </ScrollView>
       </View>
     </Modal>
+  );
+}
+
+function MetaInline({ icon, text }: { icon: Parameters<typeof Icon>[0]['name']; text: string }) {
+  const t = useTheme();
+  return (
+    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
+      <Icon name={icon} size={16} color={t.muted} />
+      <Text style={[type.small, { color: t.muted }]}>{text}</Text>
+    </View>
   );
 }

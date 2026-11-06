@@ -1,15 +1,15 @@
 import { router } from 'expo-router';
 import { useState } from 'react';
-import { Pressable, ScrollView, Text, View } from 'react-native';
+import { ScrollView, Text, View } from 'react-native';
 
 import { FadeIn, haptic, PressScale } from '../components/motion';
 import { FoodThumb, RecipeCard, RecipeSheet } from '../components/recipe';
-import { Bubble, Button, Card, MacroBar, Muted, Ring, Screen, styles } from '../components/ui';
+import { Bubble, Button, CalorieRing, Card, Empty, Header, Icon, IconButton, MacroBar, MEAL_ICON, Muted, plain, Screen, styles } from '../components/ui';
 import { habitText, LOCALE } from '../lib/i18n';
 import { dateKey, Day, isDone, MEALS, targets, totals } from '../lib/model';
 import { Recipe } from '../lib/recipes';
 import { useStore } from '../lib/store';
-import { useTheme } from '../theme';
+import { radius, space, type, useTheme } from '../theme';
 
 const tracked = (d?: Day) => !!d && (d.meals.length > 0 || d.water > 0 || d.done.length > 0);
 
@@ -34,36 +34,37 @@ export default function Calendar() {
   const trackedCount = cells.filter((k) => k && (tracked(days[k]) || coach.log[k]?.length)).length;
   const isThisMonth = y === new Date().getFullYear() && m === new Date().getMonth();
 
-  const dotColor = (k: string) => {
+  /** Cell colour by how the day went: on target, over, under, or only habits / chat. */
+  const status = (k: string): { bg: string; dot: string } | null => {
     const d = days[k];
-    if (!d?.meals.length) return tracked(d) || coach.log[k]?.length ? t.muted : null;
+    if (!d?.meals.length) return tracked(d) || coach.log[k]?.length ? { bg: t.raised, dot: t.muted } : null;
     const kcal = totals(d).kcal;
-    return kcal > goal.kcal * 1.1 ? t.warn : kcal >= goal.kcal * 0.85 ? t.good : t.muted;
+    if (kcal > goal.kcal * 1.1) return { bg: t.raised, dot: t.carbs };
+    if (kcal >= goal.kcal * 0.85) return { bg: t.accentSoft, dot: t.accent };
+    return { bg: t.raised, dot: t.muted };
   };
 
-  const shift = (n: number) => { haptic.tap(); setMonth(new Date(y, m + n, 1)); };
+  const shift = (n: number) => setMonth(new Date(y, m + n, 1));
 
   return (
     <Screen>
-      <View style={styles.rowBetween}>
-        <Text style={[styles.brand, { color: t.ink }]}>{tr('cal.title')}</Text>
-        <View style={styles.dayNav}>
-          <Pressable accessibilityLabel={tr('cal.prevMonth')} onPress={() => shift(-1)} style={[styles.navBtn, { borderColor: t.line }]}>
-            <Text style={{ color: t.ink, fontSize: 18 }}>‹</Text>
-          </Pressable>
-          <Pressable
-            accessibilityLabel={tr('cal.nextMonth')} disabled={isThisMonth} onPress={() => shift(1)}
-            style={[styles.navBtn, { borderColor: t.line, opacity: isThisMonth ? 0.35 : 1 }]}
-          >
-            <Text style={{ color: t.ink, fontSize: 18 }}>›</Text>
-          </Pressable>
-        </View>
-      </View>
+      <Header
+        title={tr('cal.title')}
+        right={<IconButton icon="close" label={tr('done')} onPress={() => (router.canGoBack() ? router.back() : router.replace('/'))} />}
+      />
 
-      <Card title={month.toLocaleDateString(locale, { month: 'long', year: 'numeric' })} right={<Muted>{tr('cal.tracked', { n: trackedCount })}</Muted>}>
+      <Card>
+        <View style={styles.rowBetween}>
+          <IconButton icon="chevron-back" label={tr('cal.prevMonth')} onPress={() => shift(-1)} />
+          <View style={{ alignItems: 'center' }}>
+            <Text style={[type.h2, { color: t.ink }]}>{month.toLocaleDateString(locale, { month: 'long', year: 'numeric' })}</Text>
+            <Muted>{tr('cal.tracked', { n: trackedCount })}</Muted>
+          </View>
+          <IconButton icon="chevron-forward" label={tr('cal.nextMonth')} disabled={isThisMonth} onPress={() => shift(1)} />
+        </View>
         <View style={{ flexDirection: 'row' }}>
           {weekdays.map((w, i) => (
-            <Text key={i} style={{ flex: 1, textAlign: 'center', color: t.muted, fontSize: 12, fontWeight: '700' }}>{w}</Text>
+            <Text key={i} style={[type.caption, { flex: 1, textAlign: 'center', color: t.muted }]}>{w}</Text>
           ))}
         </View>
         <View style={{ flexDirection: 'row', flexWrap: 'wrap' }}>
@@ -71,24 +72,27 @@ export default function Calendar() {
             if (!k) return <View key={`e${i}`} style={{ width: `${100 / 7}%`, aspectRatio: 1 }} />;
             const future = k > today;
             const on = k === selected;
-            const dot = dotColor(k);
+            const s = status(k);
             return (
-              <View key={k} style={{ width: `${100 / 7}%`, aspectRatio: 1, padding: 2 }}>
+              <View key={k} style={{ width: `${100 / 7}%`, aspectRatio: 1, padding: 3 }}>
                 <PressScale
-                  disabled={future} onPress={() => { haptic.tap(); setSelected(k); }} accessibilityLabel={k} accessibilityState={{ selected: on }}
+                  disabled={future} onPress={() => { haptic.tap(); setSelected(k); }} accessibilityRole="button" accessibilityLabel={k} accessibilityState={{ selected: on }}
                   style={{
-                    flex: 1, borderRadius: 10, alignItems: 'center', justifyContent: 'center', gap: 3,
-                    backgroundColor: on ? t.accent : k === today ? t.chip : 'transparent', opacity: future ? 0.3 : 1,
+                    flex: 1, borderRadius: radius.sm, alignItems: 'center', justifyContent: 'center', gap: 3,
+                    backgroundColor: on ? t.accent : s ? s.bg : 'transparent', opacity: future ? 0.3 : 1,
+                    borderWidth: k === today && !on ? 1.5 : 0, borderColor: t.accent,
                   }}
                 >
-                  <Text style={{ color: on ? t.accentInk : t.ink, fontWeight: k === today || on ? '800' : '500' }}>{Number(k.slice(8))}</Text>
-                  <View style={{ width: 6, height: 6, borderRadius: 3, backgroundColor: dot ? (on ? t.accentInk : dot) : 'transparent' }} />
+                  <Text style={[k === today || on ? type.label : type.small, { color: on ? t.accentInk : t.ink }]}>{Number(k.slice(8))}</Text>
+                  <View style={{ width: 6, height: 6, borderRadius: 3, backgroundColor: s ? (on ? t.accentInk : s.dot) : 'transparent' }} />
                 </PressScale>
               </View>
             );
           })}
         </View>
-        <Muted style={{ fontSize: 11 }}>{tr('cal.legend')}</Muted>
+        <View style={{ flexDirection: 'row', gap: space.lg, flexWrap: 'wrap' }}>
+          <Muted style={{ fontSize: 12, flex: 1 }}>{tr('cal.legend')}</Muted>
+        </View>
       </Card>
 
       <DayDetail key={selected} k={selected} onOpenRecipe={setOpen} onOpenDay={() => { setDate(selected); router.navigate('/'); }} />
@@ -110,27 +114,28 @@ function DayDetail({ k, onOpenRecipe, onOpenDay }: { k: string; onOpenRecipe: (r
 
   return (
     <FadeIn>
-      <View style={{ gap: 16 }}>
-        <View style={styles.rowBetween}>
-          <Text style={{ color: t.ink, fontSize: 18, fontWeight: '800', flex: 1 }}>{title}</Text>
-          <Button small ghost label={tr('cal.open')} onPress={onOpenDay} />
+      <View style={{ gap: space.lg }}>
+        <View style={[styles.rowBetween, { gap: space.md }]}>
+          <Text style={[type.h2, { color: t.ink, flex: 1 }]} accessibilityRole="header">{title}</Text>
+          <Button small kind="secondary" icon="open-outline" label={plain(tr('cal.open'))} onPress={onOpenDay} />
         </View>
 
-        {!tracked(day) && !chat.length ? (
-          <Card><Muted>{tr('cal.empty')}</Muted></Card>
-        ) : null}
+        {!tracked(day) && !chat.length ? <Card><Empty icon="calendar-clear-outline" text={tr('cal.empty')} /></Card> : null}
 
         {tracked(day) ? (
-          <Card title={tr('today.fuel')} right={<Muted>{tr('today.target', { n: goal.kcal.toLocaleString() })}</Muted>}>
-            <View style={{ flexDirection: 'row', gap: 14, alignItems: 'center' }}>
-              <Ring value={sum.kcal} goal={goal.kcal} size={120} />
-              <View style={{ flex: 1, gap: 10 }}>
+          <Card>
+            <View style={{ flexDirection: 'row', gap: space.lg, alignItems: 'center' }}>
+              <CalorieRing value={sum.kcal} goal={goal.kcal} size={116} />
+              <View style={{ flex: 1, gap: space.sm }}>
                 <MacroBar label={tr('protein')} value={sum.p} goal={goal.p} color={t.protein} />
                 <MacroBar label={tr('carbs')} value={sum.c} goal={goal.c} color={t.carbs} />
                 <MacroBar label={tr('fat')} value={sum.f} goal={goal.f} color={t.fat} />
               </View>
             </View>
-            <Text style={{ color: t.ink }}>💧 {tr('cal.water', { n: day!.water, g: profile.waterGoal })}</Text>
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: space.sm }}>
+              <Icon name="water" size={18} color={t.water} />
+              <Text style={[type.label, { color: t.ink }]}>{tr('cal.water', { n: day!.water, g: profile.waterGoal })}</Text>
+            </View>
           </Card>
         ) : null}
 
@@ -140,13 +145,16 @@ function DayDetail({ k, onOpenRecipe, onOpenDay }: { k: string; onOpenRecipe: (r
               const items = day.meals.filter((x) => x.meal === meal);
               if (!items.length) return null;
               return (
-                <View key={meal} style={{ gap: 4 }}>
-                  <Text style={{ color: t.muted, fontWeight: '700', fontSize: 13 }}>{tr(`meal.${meal}`).toLocaleUpperCase()}</Text>
+                <View key={meal} style={{ gap: space.xs }}>
+                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                    <Icon name={MEAL_ICON[meal]} size={16} color={t.muted} />
+                    <Text style={[type.overline, { color: t.muted }]}>{tr(`meal.${meal}`).toLocaleUpperCase()}</Text>
+                  </View>
                   {items.map((x) => (
-                    <View key={x.id} style={[styles.rowBetween, { gap: 10, paddingVertical: 4 }]}>
-                      <FoodThumb img={x.img} name={x.name} size={32} />
-                      <Text style={{ color: t.ink, flex: 1 }}>{x.name}</Text>
-                      <Text style={{ color: t.ink, fontWeight: '700' }}>{Math.round(x.kcal)}</Text>
+                    <View key={x.id} style={[styles.rowBetween, { gap: space.md, paddingVertical: space.xs }]}>
+                      <FoodThumb img={x.img} name={x.name} size={36} />
+                      <Text style={[type.small, { color: t.ink, flex: 1 }]}>{x.name}</Text>
+                      <Text style={[type.label, { color: t.ink }]}>{Math.round(x.kcal)}</Text>
                     </View>
                   ))}
                 </View>
@@ -156,13 +164,14 @@ function DayDetail({ k, onOpenRecipe, onOpenDay }: { k: string; onOpenRecipe: (r
         ) : null}
 
         {tracked(day) ? (
-          <Card title={tr('cal.habits')} right={<Muted>{habitsDone.length} / {profile.habits.length}</Muted>}>
+          <Card title={tr('cal.habits')} right={<Text style={[type.label, { color: t.accent }]}>{habitsDone.length} / {profile.habits.length}</Text>}>
             {profile.habits.map((h) => {
               const done = isDone(h, day, profile);
               return (
-                <Text key={h.id} style={{ color: done ? t.ink : t.muted }}>
-                  <Text style={{ color: done ? t.good : t.muted, fontWeight: '800' }}>{done ? '✓' : '○'}</Text>  {habitText(h, tr).name}
-                </Text>
+                <View key={h.id} style={{ flexDirection: 'row', alignItems: 'center', gap: space.sm }}>
+                  <Icon name={done ? 'checkmark-circle' : 'ellipse-outline'} size={22} color={done ? t.accent : t.muted} />
+                  <Text style={[type.small, { color: done ? t.ink : t.muted, flex: 1 }]}>{habitText(h, tr).name}</Text>
+                </View>
               );
             })}
           </Card>
@@ -171,11 +180,11 @@ function DayDetail({ k, onOpenRecipe, onOpenDay }: { k: string; onOpenRecipe: (r
         <Card title={tr('cal.chat')}>
           {chat.length === 0 ? <Muted>{tr('cal.noChat')}</Muted> : null}
           {chat.map((msg, i) => (
-            <View key={i} style={{ gap: 6 }}>
-              {msg.at && msg.role === 'user' ? <Muted style={{ fontSize: 11, textAlign: 'center' }}>{msg.at}</Muted> : null}
+            <View key={i} style={{ gap: space.sm }}>
+              {msg.at && msg.role === 'user' ? <Muted style={{ fontSize: 12, textAlign: 'center' }}>{msg.at}</Muted> : null}
               <Bubble role={msg.role} text={msg.content} />
               {msg.recipes?.length ? (
-                <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 10 }}>
+                <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: space.md }}>
                   {msg.recipes.map((r) => <RecipeCard key={r.id} recipe={r} width={160} onPress={() => { haptic.tap(); onOpenRecipe(r); }} />)}
                 </ScrollView>
               ) : null}

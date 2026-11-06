@@ -1,21 +1,27 @@
 import { useState } from 'react';
-import { Pressable, Text, TextInput, View } from 'react-native';
+import { Pressable, Text, View } from 'react-native';
 
 import { FadeIn, haptic, Pop, useToast } from '../components/motion';
-import { Button, Card, DayHeader, Muted, Screen, styles } from '../components/ui';
-import { habitText } from '../lib/i18n';
+import { Button, Card, DayHeader, Empty, Icon, IconButton, Input, Muted, Ring, Screen, styles } from '../components/ui';
+import { habitText, LOCALE } from '../lib/i18n';
 import { dateKey, isDone, shiftKey, streak } from '../lib/model';
 import { useStore } from '../lib/store';
-import { useTheme } from '../theme';
+import { radius, space, TOUCH, type, useTheme } from '../theme';
 
 export default function Habits() {
   const t = useTheme();
-  const { profile, days, day, toggleHabit, addHabit, removeHabit, t: tr } = useStore();
+  const { profile, days, day, toggleHabit, addHabit, removeHabit, t: tr, lang } = useStore();
   const [name, setName] = useState('');
   const [editing, setEditing] = useState(false);
   const toast = useToast();
   const today = dateKey(new Date());
   const doneCount = profile.habits.filter((h) => isDone(h, day, profile)).length;
+  const best = Math.max(0, ...profile.habits.map((h) => streak(h, days, profile)));
+  const week = Array.from({ length: 7 }, (_, i) => shiftKey(today, i - 6));
+  const letter = (k: string) => {
+    const [y, m, d] = k.split('-').map(Number);
+    return new Date(y, m - 1, d).toLocaleDateString(LOCALE[lang ?? 'en'], { weekday: 'narrow' });
+  };
 
   const submit = () => {
     if (!name.trim()) return;
@@ -28,68 +34,94 @@ export default function Habits() {
   return (
     <Screen>
       <DayHeader title={tr('habits.title')} />
-      <Card
-        title={tr('habits.count', { d: doneCount, n: profile.habits.length })}
-        right={<Pressable onPress={() => setEditing(!editing)}><Text style={{ color: t.accent, fontWeight: '600' }}>{editing ? tr('done') : tr('edit')}</Text></Pressable>}
-      >
-        {profile.habits.length === 0 ? <Muted>{tr('habits.empty')}</Muted> : null}
-        {profile.habits.map((h, i) => {
-          const on = isDone(h, day, profile);
-          const s = streak(h, days, profile);
-          const { name, note } = habitText(h, tr);
-          return (
-            <FadeIn key={h.id} delay={i * 40}>
-            <View style={[styles.rowBetween, { gap: 12, paddingVertical: 8, borderBottomWidth: 1, borderBottomColor: t.line }]}>
+
+      <FadeIn>
+        <View style={{ flexDirection: 'row', gap: space.md }}>
+          <View style={{ flex: 1, backgroundColor: t.hero, borderRadius: radius.lg, padding: space.lg, flexDirection: 'row', alignItems: 'center', gap: space.md }}>
+            <Ring value={doneCount} goal={Math.max(1, profile.habits.length)} size={64} stroke={16} on="hero">
+              <Icon name="checkmark" size={22} color={t.heroInk} />
+            </Ring>
+            <View style={{ flex: 1 }}>
+              <Text style={[type.number, { fontSize: 24, color: t.heroInk }]}>{doneCount}/{profile.habits.length}</Text>
+              <Text style={[type.caption, { color: t.heroMuted }]} numberOfLines={2}>{tr('habits.count', { d: doneCount, n: profile.habits.length })}</Text>
+            </View>
+          </View>
+          <View style={{ width: 112, backgroundColor: t.surface, borderWidth: 1, borderColor: t.line, borderRadius: radius.lg, padding: space.lg, justifyContent: 'center', gap: 2 }}>
+            <Icon name="flame" size={24} color={t.streak} />
+            <Text style={[type.number, { fontSize: 24, color: t.ink }]}>{best}d</Text>
+          </View>
+        </View>
+      </FadeIn>
+
+      <View style={styles.rowBetween}>
+        <View style={{ flexDirection: 'row', gap: 6, paddingLeft: TOUCH + space.md + space.lg }}>
+          {week.map((k) => (
+            <Text key={k} style={[type.caption, { width: 12, textAlign: 'center', color: k === today ? t.accent : t.muted }]}>{letter(k)}</Text>
+          ))}
+        </View>
+        <Button small kind="ghost" icon={editing ? 'checkmark' : 'create-outline'} label={editing ? tr('done') : tr('edit')} onPress={() => setEditing(!editing)} />
+      </View>
+
+      {profile.habits.length === 0 ? <Card><Empty icon="checkmark-circle-outline" text={tr('habits.empty')} /></Card> : null}
+      {profile.habits.map((h, i) => {
+        const on = isDone(h, day, profile);
+        const s = streak(h, days, profile);
+        const { name: label, note } = habitText(h, tr);
+        return (
+          <FadeIn key={h.id} delay={i * 40}>
+            <View style={{ backgroundColor: t.surface, borderRadius: radius.lg, borderWidth: 1, borderColor: on ? t.accent : t.line, padding: space.lg, flexDirection: 'row', alignItems: 'center', gap: space.md }}>
               <Pressable
-                accessibilityRole="checkbox" accessibilityState={{ checked: on, disabled: !!h.auto }} accessibilityLabel={name}
+                accessibilityRole="checkbox" accessibilityState={{ checked: on, disabled: !!h.auto }} accessibilityLabel={label}
                 disabled={!!h.auto}
                 onPress={() => {
                   if (!on) {
                     haptic.success();
-                    if (s + 1 >= 2) toast(tr('habits.streak', { n: s + 1, name }));
+                    if (s + 1 >= 2) toast(tr('habits.streak', { n: s + 1, name: label }));
                   } else haptic.soft();
                   toggleHabit(h.id);
                 }}
-                style={{ width: 32, height: 32, borderRadius: 8, borderWidth: 2, borderColor: on ? t.good : t.line, backgroundColor: on ? t.good : 'transparent', alignItems: 'center', justifyContent: 'center' }}
+                style={({ pressed }) => ({
+                  width: TOUCH, height: TOUCH, borderRadius: radius.md, borderWidth: 2, alignItems: 'center', justifyContent: 'center',
+                  borderColor: on ? t.accent : t.line, backgroundColor: on ? t.accent : pressed ? t.raised : 'transparent',
+                })}
               >
                 <Pop trigger={on}>
-                  <Text style={{ color: on ? '#fff' : 'transparent', fontWeight: '800' }}>✓</Text>
+                  {on ? <Icon name="checkmark" size={26} color={t.accentInk} /> : h.auto ? <Icon name="flash-outline" size={20} color={t.muted} /> : null}
                 </Pop>
               </Pressable>
-              <View style={{ flex: 1 }}>
-                <Text style={{ color: t.ink, fontWeight: '500' }}>{name}</Text>
+              <View style={{ flex: 1, gap: 6 }}>
+                <Text style={[type.bodyStrong, { color: t.ink }]}>{label}</Text>
                 {note ? <Muted style={{ fontSize: 12 }}>{note}</Muted> : null}
-                <View style={{ flexDirection: 'row', gap: 3, marginTop: 5 }}>
-                  {Array.from({ length: 7 }, (_, i) => {
-                    const k = shiftKey(today, i - 6);
-                    return <View key={k} style={{ width: 9, height: 9, borderRadius: 2, backgroundColor: isDone(h, days[k], profile) ? t.good : t.chip }} />;
+                <View style={{ flexDirection: 'row', gap: 6 }} accessible accessibilityLabel={`${label}: ${week.filter((k) => isDone(h, days[k], profile)).length}/7`}>
+                  {week.map((k) => {
+                    const done = isDone(h, days[k], profile);
+                    return <View key={k} style={{ width: 12, height: 12, borderRadius: 4, backgroundColor: done ? t.accent : t.raised, borderWidth: k === today ? 1.5 : 0, borderColor: t.accent }} />;
                   })}
                 </View>
               </View>
               {editing ? (
-                <Pressable onPress={() => { haptic.soft(); removeHabit(h.id); }} hitSlop={8} accessibilityLabel={`${tr('delete')} ${name}`}>
-                  <Text style={{ color: t.warn, fontWeight: '600' }}>{tr('delete')}</Text>
-                </Pressable>
+                <IconButton icon="trash-outline" label={`${tr('delete')} ${label}`} onPress={() => { haptic.soft(); removeHabit(h.id); }} />
               ) : (
                 <Pop trigger={s}>
-                  <Text style={{ color: s >= 3 ? t.accent : t.ink, fontWeight: '800', fontSize: 18, minWidth: 40, textAlign: 'right' }}>{s >= 3 ? '🔥' : ''}{s}d</Text>
+                  <View style={{ alignItems: 'center', minWidth: 44 }}>
+                    <Icon name={s >= 3 ? 'flame' : 'flame-outline'} size={22} color={s >= 3 ? t.streak : t.muted} />
+                    <Text style={[type.label, { color: s >= 3 ? t.ink : t.muted }]}>{s}d</Text>
+                  </View>
                 </Pop>
               )}
             </View>
-            </FadeIn>
-          );
-        })}
-        <View style={{ flexDirection: 'row', gap: 8 }}>
-          <TextInput
-            value={name} onChangeText={setName} onSubmitEditing={submit} returnKeyType="done" maxLength={60}
-            placeholder={tr('habits.new')} placeholderTextColor={t.muted}
-            style={[styles.input, { flex: 1, borderColor: t.line, color: t.ink, backgroundColor: t.bg }]}
-          />
-          <Button label={tr('add')} onPress={submit} disabled={!name.trim()} />
-        </View>
-      </Card>
+          </FadeIn>
+        );
+      })}
+
+      <View style={{ flexDirection: 'row', gap: space.sm }}>
+        <Input
+          style={{ flex: 1 }} icon="add-circle-outline" value={name} onChangeText={setName} onSubmitEditing={submit} returnKeyType="done" maxLength={60}
+          placeholder={tr('habits.new')} accessibilityLabel={tr('habits.new')}
+        />
+        <IconButton icon="add" tone="filled" label={tr('add')} onPress={submit} disabled={!name.trim()} />
+      </View>
       <Muted>{tr('habits.note')}</Muted>
     </Screen>
   );
 }
-

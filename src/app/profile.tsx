@@ -1,16 +1,15 @@
 import { router, useFocusEffect } from 'expo-router';
 import { useCallback, useState } from 'react';
-import { Pressable, Text, TextInput, View } from 'react-native';
+import { Pressable, Text, View } from 'react-native';
 
 import { haptic, useToast } from '../components/motion';
-
-import { Button, Card, Muted, Screen, styles } from '../components/ui';
+import { Button, Card, Chip, Field, Header, Icon, IconButton, IconName, Input, Muted, Screen } from '../components/ui';
 import { AI_SUPPORTED, loadApiKey, saveApiKey } from '../lib/ai';
 import { signOut as endSession } from '../lib/auth';
 import { LANGS } from '../lib/i18n';
 import { ACTIVITY, GOALS, Profile, targets } from '../lib/model';
 import { useStore } from '../lib/store';
-import { useTheme } from '../theme';
+import { radius, space, type, useTheme } from '../theme';
 
 export default function Targets() {
   const t = useTheme();
@@ -18,36 +17,44 @@ export default function Targets() {
   const goal = targets(profile);
 
   const num = (key: 'age' | 'height' | 'weight' | 'waterGoal', label: string) => (
-    <View style={{ flex: 1, gap: 4 }}>
-      <Muted style={{ fontSize: 12 }}>{label}</Muted>
-      <TextInput
-        defaultValue={String(profile[key])} keyboardType="decimal-pad"
-        onChangeText={(v) => { const n = Number(v); if (n > 0) updateProfile({ [key]: key === 'waterGoal' ? Math.min(16, Math.round(n)) : n } as Partial<Profile>); }}
-        style={[styles.input, { borderColor: t.line, color: t.ink, backgroundColor: t.bg }]}
-      />
-    </View>
+    <Field
+      label={label} style={{ flex: 1 }} defaultValue={String(profile[key])} keyboardType="decimal-pad"
+      onChangeText={(v) => { const n = Number(v); if (n > 0) updateProfile({ [key]: key === 'waterGoal' ? Math.min(16, Math.round(n)) : n } as Partial<Profile>); }}
+    />
   );
 
   return (
     <Screen>
-      <View style={styles.rowBetween}>
-        <Text style={[styles.brand, { color: t.ink }]}>{tr('prof.title')}</Text>
-        <Pressable onPress={() => (router.canGoBack() ? router.back() : router.replace('/'))} hitSlop={8}>
-          <Text style={{ color: t.accent, fontWeight: '600' }}>{tr('done')}</Text>
-        </Pressable>
-      </View>
+      <Header
+        title={tr('prof.title')}
+        right={<IconButton icon="close" label={tr('done')} onPress={() => (router.canGoBack() ? router.back() : router.replace('/'))} />}
+      />
 
-      <Card title={tr('prof.daily')}>
-        <Text style={{ color: t.ink, fontSize: 40, fontWeight: '800' }}>{goal.kcal.toLocaleString()} <Text style={{ fontSize: 16, color: t.muted }}>{tr('kcal')}</Text></Text>
-        <Text style={{ color: t.ink }}>{tr('protein')} {goal.p} g · {tr('carbs')} {goal.c} g · {tr('fat')} {goal.f} g</Text>
-        <Muted>{tr('prof.formula')}</Muted>
-      </Card>
+      <View style={{ backgroundColor: t.hero, borderRadius: radius.lg, padding: space.xl - 4, gap: space.md }}>
+        <Text style={[type.overline, { color: t.heroMuted }]}>{tr('prof.daily').toLocaleUpperCase()}</Text>
+        <Text style={[type.display, { color: t.heroInk }]}>
+          {goal.kcal.toLocaleString()} <Text style={[type.h2, { color: t.heroMuted }]}>{tr('kcal')}</Text>
+        </Text>
+        <View style={{ flexDirection: 'row', gap: space.sm }}>
+          {([[tr('protein'), goal.p, t.protein], [tr('carbs'), goal.c, t.carbs], [tr('fat'), goal.f, t.fat]] as const).map(([l, v, c]) => (
+            <View key={l} style={{ flex: 1, backgroundColor: t.heroTrack, borderRadius: radius.md, padding: space.md, gap: 2 }}>
+              <View style={{ width: 8, height: 8, borderRadius: 4, backgroundColor: c }} />
+              <Text style={[type.number, { fontSize: 18, color: t.heroInk }]}>{v} g</Text>
+              <Text style={[type.caption, { color: t.heroMuted }]}>{l}</Text>
+            </View>
+          ))}
+        </View>
+        <Text style={[type.caption, { color: t.heroMuted }]}>{tr('prof.formula')}</Text>
+      </View>
 
       <AiCoachCard />
 
       <Card title={tr('prof.about')}>
-        <Options value={profile.sex} options={[{ value: 'f', label: tr('prof.female') }, { value: 'm', label: tr('prof.male') }]} onChange={(sex) => updateProfile({ sex })} />
-        <View style={{ flexDirection: 'row', gap: 8 }}>
+        <View style={{ flexDirection: 'row', gap: space.sm }}>
+          <Chip icon="female-outline" label={tr('prof.female')} on={profile.sex === 'f'} onPress={() => updateProfile({ sex: 'f' })} />
+          <Chip icon="male-outline" label={tr('prof.male')} on={profile.sex === 'm'} onPress={() => updateProfile({ sex: 'm' })} />
+        </View>
+        <View style={{ flexDirection: 'row', gap: space.sm }}>
           {num('age', tr('prof.age'))}
           {num('height', tr('prof.height'))}
           {num('weight', tr('prof.weight'))}
@@ -55,11 +62,17 @@ export default function Targets() {
       </Card>
 
       <Card title={tr('prof.activity')}>
-        <Options value={profile.activity} options={ACTIVITY.map((a) => ({ ...a, label: tr(`act.${a.value}` as 'act.1.2') }))} onChange={(activity) => updateProfile({ activity })} />
+        <Options
+          value={profile.activity} onChange={(activity) => updateProfile({ activity })}
+          options={ACTIVITY.map((a, i) => ({ ...a, icon: (['bed-outline', 'walk-outline', 'bicycle-outline', 'barbell-outline'] as IconName[])[i], label: tr(`act.${a.value}` as 'act.1.2') }))}
+        />
       </Card>
 
       <Card title={tr('prof.goal')}>
-        <Options value={profile.goal} options={GOALS.map((g) => ({ ...g, label: tr(`goal.${g.value}` as 'goal.0') }))} onChange={(g) => updateProfile({ goal: g })} />
+        <Options
+          value={profile.goal} onChange={(g) => updateProfile({ goal: g })}
+          options={GOALS.map((g, i) => ({ ...g, icon: (['trending-down-outline', 'trending-down-outline', 'remove-outline', 'trending-up-outline'] as IconName[])[i], label: tr(`goal.${g.value}` as 'goal.0') }))}
+        />
       </Card>
 
       <Card title={tr('prof.water')}>
@@ -67,7 +80,9 @@ export default function Targets() {
       </Card>
 
       <Card title={tr('prof.language')}>
-        <Options value={lang ?? 'en'} options={LANGS.map((l) => ({ value: l.code, label: l.name }))} onChange={setLang} />
+        <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: space.sm }}>
+          {LANGS.map((l) => <Chip key={l.code} label={l.name} on={(lang ?? 'en') === l.code} onPress={() => setLang(l.code)} />)}
+        </View>
       </Card>
 
       {account ? (
@@ -75,14 +90,21 @@ export default function Targets() {
           {account.mode === 'guest' ? (
             <>
               <Muted>{tr('prof.guest')}</Muted>
-              <Button label={tr('prof.createAccount')} onPress={signOut} />
+              <Button icon="mail-outline" label={tr('prof.createAccount')} onPress={signOut} />
             </>
           ) : (
             <>
-              <Text style={{ color: t.ink, fontWeight: '700' }}>{account.name}</Text>
-              <Muted>{account.email}</Muted>
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: space.md }}>
+                <View style={{ width: 48, height: 48, borderRadius: 24, backgroundColor: t.accentSoft, alignItems: 'center', justifyContent: 'center' }}>
+                  <Text style={[type.h2, { color: t.accent }]}>{(account.name || account.email).slice(0, 1).toUpperCase()}</Text>
+                </View>
+                <View style={{ flex: 1 }}>
+                  <Text style={[type.bodyStrong, { color: t.ink }]}>{account.name}</Text>
+                  <Muted>{account.email}</Muted>
+                </View>
+              </View>
               <Muted>{tr('prof.localNote')}</Muted>
-              <Button ghost label={tr('prof.signOut')} onPress={async () => { await endSession(); signOut(); }} />
+              <Button kind="danger" icon="log-out-outline" label={tr('prof.signOut')} onPress={async () => { await endSession(); signOut(); }} />
             </>
           )}
         </Card>
@@ -91,18 +113,23 @@ export default function Targets() {
   );
 }
 
-function Options<T extends string | number>({ value, options, onChange }: { value: T; options: { value: T; label: string }[]; onChange: (v: T) => void }) {
+function Options<T extends string | number>({ value, options, onChange }: { value: T; options: { value: T; label: string; icon?: IconName }[]; onChange: (v: T) => void }) {
   const t = useTheme();
   return (
-    <View style={{ gap: 6 }}>
+    <View style={{ gap: space.sm }} accessibilityRole="radiogroup">
       {options.map((o) => {
         const on = o.value === value;
         return (
           <Pressable
             key={String(o.value)} onPress={() => { haptic.tap(); onChange(o.value); }} accessibilityRole="radio" accessibilityState={{ checked: on }}
-            style={{ padding: 12, borderRadius: 8, borderWidth: 1, borderColor: on ? t.accent : t.line, backgroundColor: on ? t.chip : 'transparent' }}
+            style={({ pressed }) => ({
+              minHeight: 52, paddingHorizontal: space.md, borderRadius: radius.md, borderWidth: 1.5, flexDirection: 'row', alignItems: 'center', gap: space.md,
+              borderColor: on ? t.accent : t.line, backgroundColor: on ? t.accentSoft : pressed ? t.raised : 'transparent',
+            })}
           >
-            <Text style={{ color: t.ink, fontWeight: on ? '700' : '400' }}>{o.label}</Text>
+            {o.icon ? <Icon name={o.icon} size={20} color={on ? t.accent : t.muted} /> : null}
+            <Text style={[on ? type.label : type.small, { color: t.ink, flex: 1, fontSize: 14 }]}>{o.label}</Text>
+            <Icon name={on ? 'radio-button-on' : 'radio-button-off'} size={22} color={on ? t.accent : t.muted} />
           </Pressable>
         );
       })}
@@ -119,9 +146,16 @@ function AiCoachCard() {
 
   useFocusEffect(useCallback(() => { loadApiKey().then((k) => setHasKey(!!k)); }, []));
 
+  const badge = (
+    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4, paddingHorizontal: 10, paddingVertical: 4, borderRadius: radius.pill, backgroundColor: hasKey ? t.accentSoft : t.raised }}>
+      <View style={{ width: 7, height: 7, borderRadius: 4, backgroundColor: hasKey ? t.accent : t.muted }} />
+      <Text style={[type.caption, { color: hasKey ? t.accent : t.muted }]}>{hasKey ? 'ON' : 'OFF'}</Text>
+    </View>
+  );
+
   if (!AI_SUPPORTED)
     return (
-      <Card title={tr('ai.title')}>
+      <Card title={tr('ai.title')} right={badge}>
         <Muted>{tr('ai.phoneOnly')}</Muted>
       </Card>
     );
@@ -140,21 +174,17 @@ function AiCoachCard() {
   };
 
   return (
-    <Card title={tr('ai.title')} right={<Text style={{ color: hasKey ? t.good : t.muted, fontWeight: '700' }}>{hasKey ? 'ON' : 'OFF'}</Text>}>
+    <Card title={tr('ai.title')} right={badge}>
       {hasKey ? (
         <>
           <Muted>{tr('ai.on')}</Muted>
-          <Button ghost label={tr('ai.remove')} onPress={async () => { await saveApiKey(null); setHasKey(false); toast(tr('ai.removed')); }} />
+          <Button kind="secondary" icon="trash-outline" label={tr('ai.remove')} onPress={async () => { await saveApiKey(null); setHasKey(false); toast(tr('ai.removed')); }} />
         </>
       ) : (
         <>
           <Muted>{tr('ai.off')}</Muted>
-          <TextInput
-            value={draft} onChangeText={setDraft} placeholder="sk-ant-…" placeholderTextColor={t.muted}
-            autoCapitalize="none" autoCorrect={false} secureTextEntry
-            style={[styles.input, { borderColor: t.line, color: t.ink, backgroundColor: t.bg }]}
-          />
-          <Button label={tr('ai.turnOn')} onPress={save} disabled={!draft.trim()} />
+          <Input icon="key-outline" value={draft} onChangeText={setDraft} placeholder="sk-ant-…" accessibilityLabel="API key" autoCapitalize="none" autoCorrect={false} secureTextEntry />
+          <Button icon="sparkles-outline" label={tr('ai.turnOn')} onPress={save} disabled={!draft.trim()} />
         </>
       )}
     </Card>

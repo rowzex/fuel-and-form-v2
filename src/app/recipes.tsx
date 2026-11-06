@@ -1,16 +1,17 @@
 import { useState } from 'react';
-import { Pressable, Text, View } from 'react-native';
+import { Pressable, ScrollView, Text, View } from 'react-native';
 
 import { FadeIn, haptic } from '../components/motion';
-import { RecipePhoto, RecipeSheet } from '../components/recipe';
-import { Card, Muted, Screen, styles } from '../components/ui';
+import { MacroPills, RecipePhoto, RecipeSheet } from '../components/recipe';
+import { Card, Chip, Empty, Header, Icon, IconName, MEAL_ICON, Muted, Screen } from '../components/ui';
 import { Meal, MEALS, targets, totals } from '../lib/model';
 import { rankForToday, Recipe, RECIPES } from '../lib/recipes';
 import { useStore } from '../lib/store';
-import { useTheme } from '../theme';
+import { radius, space, type, useTheme } from '../theme';
 
 type Filter = 'For you' | 'Saved' | 'High protein' | Meal;
 const FILTERS: Filter[] = ['For you', 'Saved', 'High protein', ...MEALS];
+const FILTER_ICON: Record<Filter, IconName> = { 'For you': 'sparkles-outline', Saved: 'bookmark-outline', 'High protein': 'barbell-outline', ...MEAL_ICON };
 
 export default function Recipes() {
   const t = useTheme();
@@ -32,39 +33,42 @@ export default function Recipes() {
 
   return (
     <Screen>
-      <Text style={[styles.brand, { color: t.ink }]}>{tr('recipes.title')}</Text>
-      <Muted>{kcalLeft > 0 ? tr('recipes.left', { n: kcalLeft }) : tr('recipes.reached')}</Muted>
-
-      <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 6 }}>
-        {FILTERS.map((f) => (
-          <Pressable
-            key={f} onPress={() => { haptic.tap(); setFilter(f); }} accessibilityState={{ selected: f === filter }}
-            style={{ paddingVertical: 6, paddingHorizontal: 12, borderRadius: 999, borderWidth: 1, borderColor: f === filter ? t.accent : t.line, backgroundColor: f === filter ? t.accent : 'transparent' }}
-          >
-            <Text style={{ color: f === filter ? t.accentInk : t.ink, fontWeight: '600', fontSize: 13 }}>{filterLabel(f)}{f === 'Saved' && saved.length ? ` (${saved.length})` : ''}</Text>
-          </Pressable>
-        ))}
+      <View style={{ gap: space.xs }}>
+        <Header title={tr('recipes.title')} />
+        <Muted>{kcalLeft > 0 ? tr('recipes.left', { n: kcalLeft }) : tr('recipes.reached')}</Muted>
       </View>
 
+      <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: space.sm, paddingHorizontal: space.lg }} style={{ marginHorizontal: -space.lg, flexGrow: 0 }}>
+        {FILTERS.map((f) => (
+          <Chip
+            key={f} icon={FILTER_ICON[f]} on={f === filter} onPress={() => setFilter(f)}
+            label={`${filterLabel(f)}${f === 'Saved' && saved.length ? ` · ${saved.length}` : ''}`}
+          />
+        ))}
+      </ScrollView>
+
       {list.length === 0 ? (
-        <Card>
-          <Muted>{tr('recipes.none')}</Muted>
-        </Card>
+        <Card><Empty icon="bookmark-outline" text={tr('recipes.none')} /></Card>
       ) : (
         list.map((r, i) => (
-          <FadeIn key={`${filter}-${r.id}`} delay={Math.min(i, 6) * 50}>
-            <Pressable onPress={() => { haptic.tap(); setOpen(r); }} accessibilityRole="button" accessibilityLabel={r.title}>
+          <FadeIn key={`${filter}-${r.id}`} delay={Math.min(i, 6) * 40}>
+            <Pressable onPress={() => { haptic.tap(); setOpen(r); }} accessibilityRole="button" accessibilityLabel={`${r.title}, ${r.kcal} ${tr('kcal')}`}>
               {({ pressed }) => (
-                <View style={{ backgroundColor: t.surface, borderRadius: 14, borderWidth: 1, borderColor: t.line, overflow: 'hidden', opacity: pressed ? 0.85 : 1, transform: [{ scale: pressed ? 0.985 : 1 }] }}>
-                  <RecipePhoto recipe={r} height={170} radius={0} />
-                  <View style={{ padding: 12, gap: 4 }}>
-                    <View style={styles.rowBetween}>
-                      <Text style={{ color: t.ink, fontWeight: '800', fontSize: 16, flex: 1 }}>{r.title}</Text>
-                      {r.source === 'coach' ? <Text style={{ color: t.accent, fontSize: 12, fontWeight: '700' }}>{tr('recipes.fromCoach')}</Text> : null}
+                <View style={{ backgroundColor: t.surface, borderRadius: radius.lg, borderWidth: 1, borderColor: t.line, overflow: 'hidden', opacity: pressed ? 0.88 : 1 }}>
+                  <View>
+                    <RecipePhoto recipe={r} height={176} radius={0} />
+                    <View style={{ position: 'absolute', left: space.md, top: space.md, flexDirection: 'row', gap: 6 }}>
+                      <Badge icon={MEAL_ICON[r.meal]} text={tr(`meal.${r.meal}`)} />
+                      {r.source === 'coach' ? <Badge icon="sparkles" text={tr('recipes.fromCoach')} accent /> : null}
                     </View>
-                    <Muted>
-                      {tr(`meal.${r.meal}`)} · {r.minutes} {tr('min')} · <Text style={{ color: t.accent, fontWeight: '700' }}>{r.kcal} {tr('kcal')}</Text> · P {r.p} g · C {r.c} g · F {r.f} g
-                    </Muted>
+                  </View>
+                  <View style={{ padding: space.lg, gap: space.sm }}>
+                    <Text style={[type.h2, { color: t.ink }]}>{r.title}</Text>
+                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: space.lg }}>
+                      <Meta icon="flame-outline" text={`${r.kcal} ${tr('kcal')}`} strong />
+                      <Meta icon="time-outline" text={`${r.minutes} ${tr('min')}`} />
+                    </View>
+                    <MacroPills p={r.p} c={r.c} f={r.f} />
                   </View>
                 </View>
               )}
@@ -72,8 +76,28 @@ export default function Recipes() {
           </FadeIn>
         ))
       )}
-      <Muted style={{ fontSize: 11 }}>{tr('recipes.photoNote')}</Muted>
+      <Muted style={{ fontSize: 12 }}>{tr('recipes.photoNote')}</Muted>
       <RecipeSheet recipe={open} onClose={() => setOpen(null)} />
     </Screen>
+  );
+}
+
+function Badge({ icon, text, accent }: { icon: IconName; text: string; accent?: boolean }) {
+  const t = useTheme();
+  return (
+    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4, paddingHorizontal: 10, paddingVertical: 5, borderRadius: radius.pill, backgroundColor: accent ? t.accent : t.surface }}>
+      <Icon name={icon} size={14} color={accent ? t.accentInk : t.ink} />
+      <Text style={[type.caption, { color: accent ? t.accentInk : t.ink }]}>{text}</Text>
+    </View>
+  );
+}
+
+function Meta({ icon, text, strong }: { icon: IconName; text: string; strong?: boolean }) {
+  const t = useTheme();
+  return (
+    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
+      <Icon name={icon} size={16} color={strong ? t.accent : t.muted} />
+      <Text style={[type.label, { color: strong ? t.ink : t.muted }]}>{text}</Text>
+    </View>
   );
 }
