@@ -34,6 +34,7 @@ const en = {
   'today.water': 'Water', 'today.glasses': '{n} / {g} glasses', 'today.waterSet': 'Set water to {n} glasses', 'today.ideas': 'Ideas for you', 'today.allRecipes': 'All recipes ›',
   'today.meals': 'Meals', 'today.nothing': 'Nothing logged yet.', 'today.remove': 'Remove {name}',
 
+  "log.online": "Packaged foods", "log.source": "From Open Food Facts", "log.searching": "Searching Open Food Facts…", "log.offline": "Couldn't reach Open Food Facts. Check your connection and try again.", "log.typeMore": "Type 3 letters or more to search packaged foods too.", "log.scan": "Scan barcode", "log.per100": "per 100 g", "log.portion": "How much did you eat?", "log.grams": "Grams", "log.serving": "1 serving ({g} g)", "log.notFound": "This barcode isn't in Open Food Facts yet. Add it as a custom food.", "log.camDenied": "Allow camera access to scan barcodes.", "log.allowCam": "Allow camera", "log.scanHint": "Point the camera at the barcode", "log.scanWeb": "Barcode scanning works in the phone app.", "log.common": "Common foods", "log.lookingUp": "Looking up {code}…", "close": "Close",
   'log.title': 'Log food', 'log.search': 'Search foods: chicken, oats, banana…', 'log.noMatch': 'No match. Add it as a custom food below.', 'log.custom': 'Custom food',
   'log.customName': 'Name, e.g. Homemade lasagna', 'log.p': 'Protein g', 'log.c': 'Carbs g', 'log.f': 'Fat g', 'log.addTo': 'Add to {meal}', 'log.added': 'Added {name} to {meal}', 'log.addItem': 'Add {name}',
 
@@ -98,6 +99,7 @@ const fr: Dict = {
   'today.water': 'Eau', 'today.glasses': '{n} / {g} verres', 'today.waterSet': "Mettre l'eau à {n} verres", 'today.ideas': 'Idées pour vous', 'today.allRecipes': 'Toutes les recettes ›',
   'today.meals': 'Repas', 'today.nothing': 'Rien pour le moment.', 'today.remove': 'Retirer {name}',
 
+  "log.online": "Produits emballés", "log.source": "Depuis Open Food Facts", "log.searching": "Recherche dans Open Food Facts…", "log.offline": "Impossible de joindre Open Food Facts. Vérifiez votre connexion et réessayez.", "log.typeMore": "Tapez au moins 3 lettres pour chercher aussi les produits emballés.", "log.scan": "Scanner un code-barres", "log.per100": "pour 100 g", "log.portion": "Combien en avez-vous mangé ?", "log.grams": "Grammes", "log.serving": "1 portion ({g} g)", "log.notFound": "Ce code-barres n'est pas encore dans Open Food Facts. Ajoutez-le comme aliment personnalisé.", "log.camDenied": "Autorisez la caméra pour scanner les codes-barres.", "log.allowCam": "Autoriser la caméra", "log.scanHint": "Visez le code-barres avec la caméra", "log.scanWeb": "Le scan de code-barres fonctionne dans l'application mobile.", "log.common": "Aliments courants", "log.lookingUp": "Recherche de {code}…", "close": "Fermer",
   'log.title': 'Ajouter un aliment', 'log.search': 'Rechercher : poulet, avoine, banane…', 'log.noMatch': 'Aucun résultat. Ajoutez-le ci-dessous.', 'log.custom': 'Aliment personnalisé',
   'log.customName': 'Nom, ex. Lasagnes maison', 'log.p': 'Protéines g', 'log.c': 'Glucides g', 'log.f': 'Lipides g', 'log.addTo': 'Ajouter au {meal}', 'log.added': '{name} ajouté au {meal}', 'log.addItem': 'Ajouter {name}',
 
@@ -159,6 +161,7 @@ const ar: Dict = {
   'today.water': 'الماء', 'today.glasses': '{n} / {g} أكواب', 'today.waterSet': 'اجعل الماء {n} أكواب', 'today.ideas': 'أفكار لك', 'today.allRecipes': 'كل الوصفات ›',
   'today.meals': 'الوجبات', 'today.nothing': 'لم يُسجَّل شيء بعد.', 'today.remove': 'إزالة {name}',
 
+  "log.online": "منتجات معلّبة", "log.source": "من Open Food Facts", "log.searching": "جارٍ البحث في Open Food Facts…", "log.offline": "تعذّر الوصول إلى Open Food Facts. تحقّق من الاتصال وحاول مجددًا.", "log.typeMore": "اكتب 3 أحرف أو أكثر للبحث في المنتجات المعلّبة أيضًا.", "log.scan": "مسح الباركود", "log.per100": "لكل 100 غ", "log.portion": "كم أكلت؟", "log.grams": "غرام", "log.serving": "حصة واحدة ({g} غ)", "log.notFound": "هذا الباركود غير موجود بعد في Open Food Facts. أضفه كطعام مخصّص.", "log.camDenied": "اسمح بالوصول إلى الكاميرا لمسح الباركود.", "log.allowCam": "السماح بالكاميرا", "log.scanHint": "وجّه الكاميرا نحو الباركود", "log.scanWeb": "مسح الباركود يعمل في تطبيق الهاتف.", "log.common": "أطعمة شائعة", "log.lookingUp": "جارٍ البحث عن {code}…", "close": "إغلاق",
   'log.title': 'تسجيل الطعام', 'log.search': 'ابحث: دجاج، شوفان، موز…', 'log.noMatch': 'لا نتيجة. أضفه كطعام مخصص بالأسفل.', 'log.custom': 'طعام مخصص',
   'log.customName': 'الاسم، مثلا: لازانيا منزلية', 'log.p': 'بروتين غ', 'log.c': 'كربوهيدرات غ', 'log.f': 'دهون غ', 'log.addTo': 'أضف إلى {meal}', 'log.added': 'أضيف {name} إلى {meal}', 'log.addItem': 'أضف {name}',
 
@@ -220,6 +223,7 @@ const es: Dict = {
   'today.water': 'Agua', 'today.glasses': '{n} / {g} vasos', 'today.waterSet': 'Poner agua en {n} vasos', 'today.ideas': 'Ideas para ti', 'today.allRecipes': 'Todas las recetas ›',
   'today.meals': 'Comidas', 'today.nothing': 'Nada registrado aún.', 'today.remove': 'Quitar {name}',
 
+  "log.online": "Productos envasados", "log.source": "De Open Food Facts", "log.searching": "Buscando en Open Food Facts…", "log.offline": "No se pudo conectar con Open Food Facts. Revisa tu conexión e inténtalo de nuevo.", "log.typeMore": "Escribe 3 letras o más para buscar también productos envasados.", "log.scan": "Escanear código", "log.per100": "por 100 g", "log.portion": "¿Cuánto comiste?", "log.grams": "Gramos", "log.serving": "1 ración ({g} g)", "log.notFound": "Este código aún no está en Open Food Facts. Añádelo como alimento personalizado.", "log.camDenied": "Permite el acceso a la cámara para escanear códigos.", "log.allowCam": "Permitir cámara", "log.scanHint": "Apunta la cámara al código de barras", "log.scanWeb": "El escaneo de códigos funciona en la app del móvil.", "log.common": "Alimentos comunes", "log.lookingUp": "Buscando {code}…", "close": "Cerrar",
   'log.title': 'Registrar comida', 'log.search': 'Buscar: pollo, avena, plátano…', 'log.noMatch': 'Sin resultados. Añádelo abajo como alimento propio.', 'log.custom': 'Alimento propio',
   'log.customName': 'Nombre, p. ej. Lasaña casera', 'log.p': 'Proteína g', 'log.c': 'Carbohidratos g', 'log.f': 'Grasa g', 'log.addTo': 'Añadir a {meal}', 'log.added': '{name} añadido a {meal}', 'log.addItem': 'Añadir {name}',
 

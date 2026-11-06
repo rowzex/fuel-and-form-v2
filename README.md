@@ -8,6 +8,10 @@ Same features and data, new look.
 
 Dark mode: [docs/compare-v1-v2-dark.png](docs/compare-v1-v2-dark.png). Every screen in both themes is in [docs/screens](docs/screens).
 
+## Food database and barcode scanner
+
+Log food searches [Open Food Facts](https://world.openfoodfacts.org) (millions of packaged foods, strong in France and Morocco) once you type 3 letters, and the barcode button scans a product with the phone camera. Packaged foods ask how much you ate (one serving, 50/100/150 g, or any amount) and work out calories and macros from the values per 100 g. Searches wait until typing pauses and are cached, to stay within Open Food Facts' limit of about 10 searches a minute. Scanning needs the phone app; the web preview shows a note instead.
+
 ## Version 2.1: "the plate" (current)
 
 A second pass with four more skills: **frontend-design**, **emil-design-eng**, **vercel-react-native-skills** and **ui-ux-pro-max**. The v2.0 design is kept on the `v2.0` branch.

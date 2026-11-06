@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 const API = 'https://www.themealdb.com/api/json/v1/1';
 
 export function ingredientImage(name: string): string {
+  if (/^https?:\/\//.test(name)) return name; // a product photo URL (Open Food Facts)
   return `https://www.themealdb.com/images/ingredients/${encodeURIComponent(name)}-Small.png`;
 }
 

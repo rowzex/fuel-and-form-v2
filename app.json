@@ -18,7 +18,14 @@
     },
     "scheme": "fuelandform",
     "plugins": [
-      "expo-router"
+      "expo-router",
+      [
+        "expo-camera",
+        {
+          "cameraPermission": "Fuel & Form uses the camera to scan food barcodes.",
+          "recordAudioAndroid": false
+        }
+      ]
     ]
   }
 }
