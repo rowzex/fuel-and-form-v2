@@ -29,6 +29,11 @@ export const haptic = {
     if (!native) return;
     (android ? Haptics.performAndroidHapticsAsync(Haptics.AndroidHaptics.Confirm) : Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Rigid)).catch(quiet);
   },
+  /** One detent of a wheel or ruler passing the centre, like a native picker. */
+  tick: () => {
+    if (!native) return;
+    (android ? Haptics.performAndroidHapticsAsync(Haptics.AndroidHaptics.Segment_Tick) : Haptics.selectionAsync()).catch(quiet);
+  },
   celebrate: () => {
     if (!native) return;
     (android

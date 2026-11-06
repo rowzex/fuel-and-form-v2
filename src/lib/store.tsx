@@ -26,10 +26,11 @@ type Saved = {
   lang: Lang | null; // null until chosen on first launch
   account: Account | null;
   signedIn: boolean;
+  quizDone: boolean; // first-time questions answered
 };
 
 const EMPTY_COACH: Coach = { chat: [], suggested: [], usedTips: [], answers: {}, log: {} };
-const EMPTY: Saved = { profile: DEFAULT_PROFILE, days: {}, saved: [], coach: EMPTY_COACH, lang: null, account: null, signedIn: false };
+const EMPTY: Saved = { profile: DEFAULT_PROFILE, days: {}, saved: [], coach: EMPTY_COACH, lang: null, account: null, signedIn: false, quizDone: false };
 
 type Store = Saved & {
   ready: boolean;
@@ -37,6 +38,7 @@ type Store = Saved & {
   setLang: (lang: Lang) => void;
   signIn: (account: Account) => void;
   signOut: () => void;
+  finishQuiz: (patch: Partial<Profile>) => void;
   date: string;
   setDate: (key: string) => void;
   day: Day;
@@ -74,6 +76,8 @@ export function StoreProvider({ children }: { children: ReactNode }) {
           lang: parsed.lang ?? null,
           account: parsed.account ?? null,
           signedIn: parsed.signedIn ?? false,
+          // People who signed up before the questions existed already set their targets.
+          quizDone: parsed.quizDone ?? parsed.signedIn ?? false,
         });
       })
       .catch(() => {})
@@ -106,6 +110,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       setLang: (lang) => setSaved((s) => ({ ...s, lang })),
       signIn: (account) => setSaved((s) => ({ ...s, account, signedIn: true })),
       signOut: () => setSaved((s) => ({ ...s, signedIn: false })),
+      finishQuiz: (patch) => setSaved((s) => ({ ...s, profile: { ...s.profile, ...patch }, quizDone: true })),
       date,
       setDate,
       day: saved.days[date] ?? emptyDay(),

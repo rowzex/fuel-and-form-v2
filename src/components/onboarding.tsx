@@ -6,13 +6,16 @@ import { deviceLang, Lang, LANGS } from '../lib/i18n';
 import { useStore } from '../lib/store';
 import { radius, space, type, useTheme } from '../theme';
 import { FadeIn, haptic, PressScale } from './motion';
+import { Quiz } from './quiz';
 import { Button, Field, Icon, Muted, Screen } from './ui';
 
-/** First launch: pick a language, then sign up or log in with email. */
+/** First launch: pick a language, answer a few questions about you, see your plan, then sign up or log in. */
 export function Onboarding() {
-  const { lang } = useStore();
-  const [step, setStep] = useState<'lang' | 'account'>(lang ? 'account' : 'lang');
-  return step === 'lang' ? <LanguageStep onNext={() => setStep('account')} /> : <AccountStep onBack={() => setStep('lang')} />;
+  const { lang, quizDone } = useStore();
+  const [step, setStep] = useState<'lang' | 'quiz' | 'account'>(!lang ? 'lang' : quizDone ? 'account' : 'quiz');
+  if (step === 'lang') return <LanguageStep onNext={() => setStep(quizDone ? 'account' : 'quiz')} />;
+  if (step === 'quiz') return <Quiz onBack={() => setStep('lang')} onDone={() => setStep('account')} />;
+  return <AccountStep onBack={() => setStep(quizDone ? 'lang' : 'quiz')} />;
 }
 
 function Logo() {

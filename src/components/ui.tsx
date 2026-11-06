@@ -427,7 +427,7 @@ export function Empty({ icon, text, action }: { icon: IconName; text: string; ac
 }
 
 export const styles = StyleSheet.create({
-  screen: { paddingHorizontal: space.lg, paddingTop: space.sm, gap: space.lg, paddingBottom: space.xxl },
+  screen: { flexGrow: 1, paddingHorizontal: space.lg, paddingTop: space.sm, gap: space.lg, paddingBottom: space.xxl },
   card: { borderRadius: radius.lg, padding: space.lg, gap: space.md },
   sheet: { borderRadius: radius.lg, overflow: 'hidden' },
   btn: { minHeight: TOUCH, borderRadius: radius.md, paddingHorizontal: space.lg, alignItems: 'center', justifyContent: 'center', flexDirection: 'row', gap: space.sm },
