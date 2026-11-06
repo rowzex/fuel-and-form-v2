@@ -1,17 +1,17 @@
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { ComponentProps, ReactNode, RefObject, useEffect, useRef, useState } from 'react';
 import {
-  Animated, Easing, Keyboard, LayoutAnimation, Platform, Pressable, ScrollView, ScrollViewInstance, StyleProp, StyleSheet, Text, TextInput,
+  Animated, Keyboard, LayoutAnimation, Platform, Pressable, ScrollView, ScrollViewInstance, StyleProp, StyleSheet, Text, TextInput,
   TextInputProps, TextStyle, View, ViewInstance, ViewStyle,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import Svg, { Circle } from 'react-native-svg';
+import Svg, { Circle, G } from 'react-native-svg';
 
 import { LOCALE } from '../lib/i18n';
 import { dateKey, Meal, shiftKey } from '../lib/model';
 import { useStore } from '../lib/store';
-import { radius, space, TOUCH, type, useTheme } from '../theme';
-import { haptic, PressScale } from './motion';
+import { ease, radius, space, TOUCH, type, useTheme } from '../theme';
+import { haptic, PressScale, reduceMotion } from './motion';
 
 export type IconName = ComponentProps<typeof Ionicons>['name'];
 
@@ -28,10 +28,11 @@ export const plain = (s: string) => s.replace(/\s*›\s*$/, '');
 const AnimatedCircle = Animated.createAnimatedComponent(Circle);
 
 /** Animates toward `value` whenever it changes. */
-function useTween(value: number, duration = 600) {
-  const v = useRef(new Animated.Value(value)).current;
+function useTween(value: number, duration = 600, from?: number) {
+  const v = useRef(new Animated.Value(reduceMotion || from === undefined ? value : from)).current;
   useEffect(() => {
-    Animated.timing(v, { toValue: value, duration, easing: Easing.out(Easing.cubic), useNativeDriver: false }).start();
+    if (reduceMotion) { v.setValue(value); return; }
+    Animated.timing(v, { toValue: value, duration, easing: ease.out, useNativeDriver: false }).start();
   }, [value, v, duration]);
   return v;
 }
@@ -102,7 +103,7 @@ export function Header({ title, subtitle, right }: { title: string; subtitle?: s
   return (
     <View style={[styles.rowBetween, { gap: space.md, paddingTop: space.sm }]}>
       <View style={{ flex: 1, gap: 2 }}>
-        {subtitle ? <Text style={[type.overline, { color: t.muted }]}>{subtitle.toLocaleUpperCase()}</Text> : null}
+        {subtitle ? <Text style={[type.small, { color: t.muted }]}>{subtitle}</Text> : null}
         <Text style={[type.title, { color: t.ink }]} accessibilityRole="header">{title}</Text>
       </View>
       {right ? <View style={{ flexDirection: 'row', gap: space.sm }}>{right}</View> : null}
@@ -113,7 +114,7 @@ export function Header({ title, subtitle, right }: { title: string; subtitle?: s
 export function Card({ title, right, children, style, tone }: { title?: string; right?: ReactNode; children: ReactNode; style?: StyleProp<ViewStyle>; tone?: 'plain' | 'soft' }) {
   const t = useTheme();
   return (
-    <View style={[styles.card, { backgroundColor: tone === 'soft' ? t.raised : t.surface, borderColor: tone === 'soft' ? t.raised : t.line }, style]}>
+    <View style={[styles.card, { backgroundColor: tone === 'soft' ? t.raised : t.surface }, style]}>
       {title ? (
         <View style={[styles.rowBetween, { gap: space.sm }]}>
           <Text style={[type.h2, { color: t.ink, flexShrink: 1 }]} accessibilityRole="header">{title}</Text>
@@ -184,11 +185,11 @@ export function Chip({ label, on, onPress, icon }: { label: string; on: boolean;
       onPress={() => { haptic.tap(); onPress(); }} accessibilityRole="button" accessibilityState={{ selected: on }} hitSlop={4}
       style={({ pressed }) => ({
         minHeight: 40, paddingHorizontal: space.lg, borderRadius: radius.pill, flexDirection: 'row', alignItems: 'center', gap: 6,
-        backgroundColor: on ? t.accent : t.surface, borderWidth: 1, borderColor: on ? t.accent : t.line, opacity: pressed ? 0.8 : 1,
+        backgroundColor: on ? t.ink : t.surface, borderWidth: 1, borderColor: on ? t.ink : t.line, opacity: pressed ? 0.8 : 1,
       })}
     >
-      {icon ? <Icon name={icon} size={16} color={on ? t.accentInk : t.muted} /> : null}
-      <Text style={[type.label, { color: on ? t.accentInk : t.ink }]}>{label}</Text>
+      {icon ? <Icon name={icon} size={16} color={on ? t.bg : t.muted} /> : null}
+      <Text style={[type.label, { color: on ? t.bg : t.ink }]}>{label}</Text>
     </Pressable>
   );
 }
@@ -246,7 +247,7 @@ export function Ring({ value, goal, size = 176, stroke = 14, on = 'surface', col
   const over = value > goal;
   const progress = useTween(Math.min(1, goal > 0 ? value / goal : 0));
   const track = on === 'hero' ? t.heroTrack : t.raised;
-  const fill = color ?? (over ? t.carbs : on === 'hero' ? t.heroInk : t.accent);
+  const fill = color ?? (over ? t.carbs : on === 'hero' ? t.heroInk : t.ink);
   return (
     <View style={{ width: size, height: size }}>
       <Svg width={size} height={size} viewBox="0 0 120 120" style={{ transform: [{ rotate: '-90deg' }] }}>
@@ -271,15 +272,16 @@ export function CalorieRing({ value, goal, size = 176, on }: { value: number; go
   return (
     <Ring value={value} goal={goal} size={size} on={on}>
       <Text style={[type.number, { fontSize: size * 0.2, lineHeight: size * 0.24, color: ink }]}>{Math.abs(left).toLocaleString()}</Text>
-      <Text style={[type.overline, { fontSize: 11, color: sub }]}>{left >= 0 ? tr('ring.left') : tr('ring.over')}</Text>
+      <Text style={[type.caption, { color: sub }]}>{left >= 0 ? tr('ring.left') : tr('ring.over')}</Text>
     </Ring>
   );
 }
 
-/** One macro as a horizontal bar with grams eaten / target. */
+/** One macro as a horizontal bar with grams eaten / target. The fill slides (transform only, no layout work). */
 export function MacroBar({ label, value, goal, color }: { label: string; value: number; goal: number; color: string }) {
   const t = useTheme();
-  const w = useTween(Math.min(100, goal ? (value / goal) * 100 : 0));
+  const [w, setW] = useState(0);
+  const p = useTween(Math.min(1, goal ? value / goal : 0), 600, 0);
   return (
     <View style={{ gap: 6 }} accessible accessibilityLabel={`${label}: ${Math.round(value)} / ${goal} g`}>
       <View style={styles.rowBetween}>
@@ -291,10 +293,76 @@ export function MacroBar({ label, value, goal, color }: { label: string; value: 
           <Text style={[type.label, { color: t.ink }]}>{Math.round(value)}</Text> / {goal} g
         </Text>
       </View>
-      <View style={[styles.bar, { backgroundColor: t.raised }]}>
-        <Animated.View style={{ width: w.interpolate({ inputRange: [0, 100], outputRange: ['0%', '100%'] }), height: '100%', borderRadius: radius.pill, backgroundColor: color }} />
+      <View style={[styles.bar, { backgroundColor: t.raised }]} onLayout={(e) => setW(e.nativeEvent.layout.width)}>
+        <Animated.View
+          style={{
+            width: '100%', height: '100%', borderRadius: radius.pill, backgroundColor: color,
+            transform: [{ translateX: p.interpolate({ inputRange: [0, 1], outputRange: [-w, 0] }) }],
+          }}
+        />
       </View>
     </View>
+  );
+}
+
+/**
+ * The day as a plate: the outer rim fills with calories, and three inner arcs (a third of the
+ * plate each) fill with protein, carbs and fat. It draws itself in once when the screen opens,
+ * which is the one moment of motion that is not a response to a tap.
+ */
+export function Plate({ kcal, goal, p, c, f, size = 220 }: {
+  kcal: number; goal: { kcal: number; p: number; c: number; f: number }; p: number; c: number; f: number; size?: number;
+}) {
+  const t = useTheme();
+  const { t: tr } = useStore();
+  const left = Math.round(goal.kcal - kcal);
+  const over = left < 0;
+  const rim = useTween(Math.min(1, goal.kcal > 0 ? kcal / goal.kcal : 0), 900, 0);
+  const R = 54; const RW = 8; const rc = 2 * Math.PI * R;
+  const r = 41; const rw = 9; const ic = 2 * Math.PI * r;
+  const seg = ic / 3; const gap = 9; const arc = seg - gap;
+  const macros = [
+    { v: p, g: goal.p, color: t.heroProtein, label: tr('protein') },
+    { v: c, g: goal.c, color: t.heroCarbs, label: tr('carbs') },
+    { v: f, g: goal.f, color: t.heroFat, label: tr('fat') },
+  ];
+  return (
+    <View
+      style={{ width: size, height: size }} accessible
+      accessibilityLabel={`${Math.abs(left)} kcal ${over ? tr('ring.over') : tr('ring.left')}. ${macros.map((m) => `${m.label} ${Math.round(m.v)} / ${m.g} g`).join(', ')}`}
+    >
+      <Svg width={size} height={size} viewBox="0 0 120 120" style={{ transform: [{ rotate: '-90deg' }] }}>
+        <Circle cx={60} cy={60} r={R} stroke={t.heroTrack} strokeWidth={RW} fill="none" />
+        <AnimatedCircle
+          cx={60} cy={60} r={R} fill="none" strokeWidth={RW} strokeLinecap="round" stroke={over ? t.heroCarbs : t.heroInk}
+          strokeDasharray={`${rc}`} strokeDashoffset={rim.interpolate({ inputRange: [0, 1], outputRange: [rc, 0] })}
+        />
+        {macros.map((m, i) => (
+          <G key={m.label} rotation={i * 120 + (gap / ic) * 180} origin="60, 60">
+            <Circle cx={60} cy={60} r={r} stroke={t.heroTrack} strokeWidth={rw} fill="none" strokeLinecap="round" strokeDasharray={`${arc} ${ic}`} />
+            <MacroArc value={m.g ? Math.min(1, m.v / m.g) : 0} r={r} rw={rw} arc={arc} ic={ic} color={m.color} delay={i} />
+          </G>
+        ))}
+      </Svg>
+      <View style={[StyleSheet.absoluteFill, styles.center]}>
+        <Text style={[type.number, { fontSize: size * 0.2, lineHeight: size * 0.23, color: t.heroInk, letterSpacing: -1 }]}>{Math.abs(left).toLocaleString()}</Text>
+        <Text style={[type.small, { color: t.heroMuted }]}>{over ? tr('ring.over') : tr('ring.left')}</Text>
+      </View>
+    </View>
+  );
+}
+
+function MacroArc({ value, r, rw, arc, ic, color, delay }: { value: number; r: number; rw: number; arc: number; ic: number; color: string; delay: number }) {
+  const v = useRef(new Animated.Value(reduceMotion ? value : 0)).current;
+  useEffect(() => {
+    if (reduceMotion) { v.setValue(value); return; }
+    Animated.timing(v, { toValue: value, duration: 700, delay: 120 + delay * 60, easing: ease.out, useNativeDriver: false }).start();
+  }, [value, v, delay]);
+  return (
+    <AnimatedCircle
+      cx={60} cy={60} r={r} fill="none" strokeWidth={rw} strokeLinecap="round" stroke={color}
+      strokeDasharray={v.interpolate({ inputRange: [0, 1], outputRange: [`0.001 ${ic}`, `${arc} ${ic}`] })}
+    />
   );
 }
 
@@ -360,12 +428,13 @@ export function Empty({ icon, text, action }: { icon: IconName; text: string; ac
 
 export const styles = StyleSheet.create({
   screen: { paddingHorizontal: space.lg, paddingTop: space.sm, gap: space.lg, paddingBottom: space.xxl },
-  card: { borderWidth: 1, borderRadius: radius.lg, padding: space.lg, gap: space.md },
+  card: { borderRadius: radius.lg, padding: space.lg, gap: space.md },
+  sheet: { borderRadius: radius.lg, overflow: 'hidden' },
   btn: { minHeight: TOUCH, borderRadius: radius.md, paddingHorizontal: space.lg, alignItems: 'center', justifyContent: 'center', flexDirection: 'row', gap: space.sm },
   btnSmall: { minHeight: 36, borderRadius: radius.pill, paddingHorizontal: 14 },
   center: { alignItems: 'center', justifyContent: 'center' },
   rowBetween: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
-  bar: { height: 10, borderRadius: radius.pill, overflow: 'hidden' },
+  bar: { height: 8, borderRadius: radius.pill, overflow: 'hidden' },
   input: { ...type.body, borderWidth: 1.5, borderRadius: radius.md, paddingHorizontal: 14, paddingVertical: 12, minHeight: TOUCH },
   inputRow: { flexDirection: 'row', alignItems: 'center', gap: space.sm, borderWidth: 1.5, borderRadius: radius.md, paddingHorizontal: 14, minHeight: TOUCH },
 });

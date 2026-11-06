@@ -60,7 +60,7 @@ export default function LogFood() {
       <Card style={{ paddingVertical: space.sm, gap: 0 }}>
         {results.length === 0 ? <Empty icon="search-outline" text={tr('log.noMatch')} /> : null}
         {results.map((f, i) => (
-          <FadeIn key={f.name} delay={Math.min(i, 8) * 20}>
+          <View key={f.name}>
             <PressScale
               onPress={() => add(f)} accessibilityRole="button" accessibilityLabel={tr('log.addItem', { name: f.name })}
               style={[styles.rowBetween, { minHeight: 64, gap: space.md, borderTopWidth: i ? 1 : 0, borderTopColor: t.line }]}
@@ -69,7 +69,7 @@ export default function LogFood() {
               <View style={{ flex: 1 }}>
                 <Text style={[type.label, { color: t.ink }]}>{f.name}</Text>
                 <Text style={[type.caption, { color: t.muted }]}>
-                  <Text style={{ color: t.protein }}>P</Text> {f.p} g · <Text style={{ color: t.carbs }}>C</Text> {f.c} g · <Text style={{ color: t.fat }}>F</Text> {f.f} g
+                  <Text style={{ color: t.protein }}>P</Text> {f.p} g   <Text style={{ color: t.carbs }}>C</Text> {f.c} g   <Text style={{ color: t.fat }}>F</Text> {f.f} g
                 </Text>
               </View>
               <Text style={[type.label, { color: t.ink }]}>{f.kcal} <Text style={[type.caption, { color: t.muted }]}>{tr('kcal')}</Text></Text>
@@ -77,7 +77,7 @@ export default function LogFood() {
                 <Icon name="add" size={22} color={t.accent} />
               </View>
             </PressScale>
-          </FadeIn>
+          </View>
         ))}
       </Card>
 

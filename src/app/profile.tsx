@@ -30,13 +30,13 @@ export default function Targets() {
         right={<IconButton icon="close" label={tr('done')} onPress={() => (router.canGoBack() ? router.back() : router.replace('/'))} />}
       />
 
-      <View style={{ backgroundColor: t.hero, borderRadius: radius.lg, padding: space.xl - 4, gap: space.md }}>
-        <Text style={[type.overline, { color: t.heroMuted }]}>{tr('prof.daily').toLocaleUpperCase()}</Text>
+      <View style={{ backgroundColor: t.hero, borderRadius: radius.xl, padding: space.xl, gap: space.md }}>
+        <Text style={[type.label, { color: t.heroMuted }]}>{tr('prof.daily')}</Text>
         <Text style={[type.display, { color: t.heroInk }]}>
           {goal.kcal.toLocaleString()} <Text style={[type.h2, { color: t.heroMuted }]}>{tr('kcal')}</Text>
         </Text>
         <View style={{ flexDirection: 'row', gap: space.sm }}>
-          {([[tr('protein'), goal.p, t.protein], [tr('carbs'), goal.c, t.carbs], [tr('fat'), goal.f, t.fat]] as const).map(([l, v, c]) => (
+          {([[tr('protein'), goal.p, t.heroProtein], [tr('carbs'), goal.c, t.heroCarbs], [tr('fat'), goal.f, t.heroFat]] as const).map(([l, v, c]) => (
             <View key={l} style={{ flex: 1, backgroundColor: t.heroTrack, borderRadius: radius.md, padding: space.md, gap: 2 }}>
               <View style={{ width: 8, height: 8, borderRadius: 4, backgroundColor: c }} />
               <Text style={[type.number, { fontSize: 18, color: t.heroInk }]}>{v} g</Text>
@@ -149,7 +149,7 @@ function AiCoachCard() {
   const badge = (
     <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4, paddingHorizontal: 10, paddingVertical: 4, borderRadius: radius.pill, backgroundColor: hasKey ? t.accentSoft : t.raised }}>
       <View style={{ width: 7, height: 7, borderRadius: 4, backgroundColor: hasKey ? t.accent : t.muted }} />
-      <Text style={[type.caption, { color: hasKey ? t.accent : t.muted }]}>{hasKey ? 'ON' : 'OFF'}</Text>
+      <Text style={[type.caption, { color: hasKey ? t.accent : t.muted }]}>{hasKey ? 'On' : 'Off'}</Text>
     </View>
   );
 

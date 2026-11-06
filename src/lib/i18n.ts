@@ -27,7 +27,7 @@ const en = {
   'tab.today': 'Today', 'tab.log': 'Log food', 'tab.recipes': 'Recipes', 'tab.habits': 'Habits', 'tab.coach': 'Coach', 'tab.calendar': 'Calendar', 'tab.targets': 'Targets',
   'meal.Breakfast': 'Breakfast', 'meal.Lunch': 'Lunch', 'meal.Dinner': 'Dinner', 'meal.Snack': 'Snack',
   'day.today': 'Today', 'day.yesterday': 'Yesterday', 'day.prev': 'Previous day', 'day.next': 'Next day',
-  'ring.left': 'KCAL LEFT', 'ring.over': 'KCAL OVER',
+  'ring.left': 'kcal left', 'ring.over': 'kcal over',
   protein: 'Protein', carbs: 'Carbs', fat: 'Fat', kcal: 'kcal', min: 'min', done: 'Done', edit: 'Edit', delete: 'Delete', add: 'Add', save: 'Save',
 
   'today.goal': 'Goal', 'today.targetsLink': 'My targets & AI coach ›', 'today.fuel': 'Fuel', 'today.target': 'Target {n} kcal', 'today.eaten': 'eaten', 'today.burn': 'burn estimate', 'today.items': 'items',
@@ -91,7 +91,7 @@ const fr: Dict = {
   'tab.today': "Aujourd'hui", 'tab.log': 'Ajouter', 'tab.recipes': 'Recettes', 'tab.habits': 'Habitudes', 'tab.coach': 'Coach', 'tab.calendar': 'Calendrier', 'tab.targets': 'Objectifs',
   'meal.Breakfast': 'Petit-déjeuner', 'meal.Lunch': 'Déjeuner', 'meal.Dinner': 'Dîner', 'meal.Snack': 'Collation',
   'day.today': "Aujourd'hui", 'day.yesterday': 'Hier', 'day.prev': 'Jour précédent', 'day.next': 'Jour suivant',
-  'ring.left': 'KCAL RESTANTES', 'ring.over': 'KCAL EN TROP',
+  'ring.left': 'kcal restantes', 'ring.over': 'kcal en trop',
   protein: 'Protéines', carbs: 'Glucides', fat: 'Lipides', kcal: 'kcal', min: 'min', done: 'OK', edit: 'Modifier', delete: 'Supprimer', add: 'Ajouter', save: 'Enregistrer',
 
   'today.goal': 'Objectif', 'today.targetsLink': 'Mes objectifs et coach IA ›', 'today.fuel': 'Énergie', 'today.target': 'Objectif {n} kcal', 'today.eaten': 'mangées', 'today.burn': 'dépense estimée', 'today.items': 'aliments',
@@ -213,7 +213,7 @@ const es: Dict = {
   'tab.today': 'Hoy', 'tab.log': 'Registrar', 'tab.recipes': 'Recetas', 'tab.habits': 'Hábitos', 'tab.coach': 'Coach', 'tab.calendar': 'Calendario', 'tab.targets': 'Objetivos',
   'meal.Breakfast': 'Desayuno', 'meal.Lunch': 'Almuerzo', 'meal.Dinner': 'Cena', 'meal.Snack': 'Merienda',
   'day.today': 'Hoy', 'day.yesterday': 'Ayer', 'day.prev': 'Día anterior', 'day.next': 'Día siguiente',
-  'ring.left': 'KCAL RESTANTES', 'ring.over': 'KCAL DE MÁS',
+  'ring.left': 'kcal restantes', 'ring.over': 'kcal de más',
   protein: 'Proteína', carbs: 'Carbohidratos', fat: 'Grasa', kcal: 'kcal', min: 'min', done: 'Listo', edit: 'Editar', delete: 'Borrar', add: 'Añadir', save: 'Guardar',
 
   'today.goal': 'Objetivo', 'today.targetsLink': 'Mis objetivos y coach IA ›', 'today.fuel': 'Energía', 'today.target': 'Objetivo {n} kcal', 'today.eaten': 'consumidas', 'today.burn': 'gasto estimado', 'today.items': 'alimentos',

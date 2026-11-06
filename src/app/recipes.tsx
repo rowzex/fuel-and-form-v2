@@ -42,7 +42,7 @@ export default function Recipes() {
         {FILTERS.map((f) => (
           <Chip
             key={f} icon={FILTER_ICON[f]} on={f === filter} onPress={() => setFilter(f)}
-            label={`${filterLabel(f)}${f === 'Saved' && saved.length ? ` · ${saved.length}` : ''}`}
+            label={`${filterLabel(f)}${f === 'Saved' && saved.length ? ` (${saved.length})` : ''}`}
           />
         ))}
       </ScrollView>

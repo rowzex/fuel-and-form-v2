@@ -1,5 +1,6 @@
-import { useRef, useState } from 'react';
-import { Animated, Modal, Platform, Pressable, ScrollView, Text, View } from 'react-native';
+import { useState } from 'react';
+import { Image } from 'expo-image';
+import { Modal, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { ingredientImage, useDishImage } from '../lib/images';
@@ -10,23 +11,21 @@ import { radius, space, type, useTheme } from '../theme';
 import { haptic, PressScale, useToast } from './motion';
 import { Button, Chip, Icon, IconButton, MEAL_ICON, Muted } from './ui';
 
-/** A photo that fades in once loaded and falls back to a tinted tile with a food icon. */
+/**
+ * A photo via expo-image (memory + disk cache, decoded off the main thread), cross-fading in
+ * over a tinted tile with a food icon, which stays as the fallback if the photo fails.
+ */
 function Photo({ uri, label, size, radius: r = radius.md, tint }: { uri: string | null; label: string; size: { width: number | `${number}%`; height: number }; radius?: number; tint?: string }) {
   const t = useTheme();
   const [failed, setFailed] = useState(false);
-  const fade = useRef(new Animated.Value(0)).current;
   return (
     <View style={{ ...size, borderRadius: r, overflow: 'hidden', backgroundColor: tint ?? t.raised, alignItems: 'center', justifyContent: 'center' }}>
       <Icon name="restaurant-outline" size={Math.min(32, size.height / 2.6)} color={t.muted} />
       {uri && !failed ? (
-        <Animated.Image
-          source={{ uri }}
-          onLoad={() => Animated.timing(fade, { toValue: 1, duration: 220, useNativeDriver: Platform.OS !== 'web' }).start()}
-          onError={() => setFailed(true)}
-          style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, opacity: fade }}
-          resizeMode="cover"
-          accessibilityIgnoresInvertColors
-          accessibilityLabel={label}
+        <Image
+          source={{ uri }} onError={() => setFailed(true)} transition={{ duration: 200, effect: 'cross-dissolve' }}
+          cachePolicy="memory-disk" recyclingKey={uri} contentFit="cover"
+          style={StyleSheet.absoluteFill} accessibilityIgnoresInvertColors accessibilityLabel={label}
         />
       ) : null}
     </View>
@@ -64,7 +63,7 @@ export function RecipeCard({ recipe, onPress, width = 200 }: { recipe: Recipe; o
   return (
     <PressScale
       onPress={onPress} accessibilityRole="button" accessibilityLabel={`${recipe.title}, ${recipe.kcal} ${tr('kcal')}`}
-      style={{ width, backgroundColor: t.surface, borderRadius: radius.lg, borderWidth: 1, borderColor: t.line, overflow: 'hidden' }}
+      style={{ width, backgroundColor: t.surface, borderRadius: radius.lg, overflow: 'hidden' }}
     >
       <RecipePhoto recipe={recipe} height={width * 0.66} radius={0} />
       <View style={{ padding: space.md, gap: 6 }}>
@@ -102,7 +101,7 @@ export function RecipeSheet({ recipe, onClose }: { recipe: Recipe | null; onClos
   return (
     <Modal visible animationType="slide" transparent onRequestClose={onClose}>
       <Pressable style={{ flex: 1, backgroundColor: '#000000a6' }} onPress={onClose} accessibilityLabel={tr('recipe.close')} />
-      <View style={{ maxHeight: '90%', backgroundColor: t.bg, borderTopLeftRadius: 28, borderTopRightRadius: 28, overflow: 'hidden' }}>
+      <View style={{ maxHeight: '90%', backgroundColor: t.bg, borderTopLeftRadius: radius.xl, borderTopRightRadius: radius.xl, overflow: 'hidden' }}>
         <ScrollView contentContainerStyle={{ paddingBottom: insets.bottom + space.lg }}>
           <View>
             <RecipePhoto recipe={recipe} height={232} radius={0} />

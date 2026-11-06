@@ -40,7 +40,7 @@ export default function Calendar() {
     if (!d?.meals.length) return tracked(d) || coach.log[k]?.length ? { bg: t.raised, dot: t.muted } : null;
     const kcal = totals(d).kcal;
     if (kcal > goal.kcal * 1.1) return { bg: t.raised, dot: t.carbs };
-    if (kcal >= goal.kcal * 0.85) return { bg: t.accentSoft, dot: t.accent };
+    if (kcal >= goal.kcal * 0.85) return { bg: t.raised, dot: t.good };
     return { bg: t.raised, dot: t.muted };
   };
 
@@ -79,12 +79,12 @@ export default function Calendar() {
                   disabled={future} onPress={() => { haptic.tap(); setSelected(k); }} accessibilityRole="button" accessibilityLabel={k} accessibilityState={{ selected: on }}
                   style={{
                     flex: 1, borderRadius: radius.sm, alignItems: 'center', justifyContent: 'center', gap: 3,
-                    backgroundColor: on ? t.accent : s ? s.bg : 'transparent', opacity: future ? 0.3 : 1,
-                    borderWidth: k === today && !on ? 1.5 : 0, borderColor: t.accent,
+                    backgroundColor: on ? t.ink : s ? s.bg : 'transparent', opacity: future ? 0.3 : 1,
+                    borderWidth: k === today && !on ? 1.5 : 0, borderColor: t.ink,
                   }}
                 >
-                  <Text style={[k === today || on ? type.label : type.small, { color: on ? t.accentInk : t.ink }]}>{Number(k.slice(8))}</Text>
-                  <View style={{ width: 6, height: 6, borderRadius: 3, backgroundColor: s ? (on ? t.accentInk : s.dot) : 'transparent' }} />
+                  <Text style={[k === today || on ? type.label : type.small, { color: on ? t.bg : t.ink }]}>{Number(k.slice(8))}</Text>
+                  <View style={{ width: 6, height: 6, borderRadius: 3, backgroundColor: s ? (on ? t.bg : s.dot) : 'transparent' }} />
                 </PressScale>
               </View>
             );
@@ -148,7 +148,7 @@ function DayDetail({ k, onOpenRecipe, onOpenDay }: { k: string; onOpenRecipe: (r
                 <View key={meal} style={{ gap: space.xs }}>
                   <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
                     <Icon name={MEAL_ICON[meal]} size={16} color={t.muted} />
-                    <Text style={[type.overline, { color: t.muted }]}>{tr(`meal.${meal}`).toLocaleUpperCase()}</Text>
+                    <Text style={[type.label, { color: t.muted }]}>{tr(`meal.${meal}`)}</Text>
                   </View>
                   {items.map((x) => (
                     <View key={x.id} style={[styles.rowBetween, { gap: space.md, paddingVertical: space.xs }]}>

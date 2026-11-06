@@ -1,9 +1,9 @@
 import * as Haptics from 'expo-haptics';
 import { createContext, ReactNode, useCallback, useContext, useEffect, useRef, useState } from 'react';
-import { AccessibilityInfo, Animated, Easing, Platform, Pressable, PressableProps, StyleProp, Text, View, ViewStyle } from 'react-native';
+import { AccessibilityInfo, Animated, Platform, Pressable, PressableProps, StyleProp, Text, View, ViewStyle } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { motion, radius, type, useTheme } from '../theme';
+import { ease, motion, radius, type, useTheme } from '../theme';
 
 const native = Platform.OS !== 'web';
 
@@ -14,26 +14,30 @@ export const haptic = {
   soft: () => native && Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light).catch(() => {}),
 };
 
-let reduceMotion = false;
+export let reduceMotion = false;
 AccessibilityInfo.isReduceMotionEnabled?.().then((v) => (reduceMotion = v)).catch(() => {});
+AccessibilityInfo.addEventListener?.('reduceMotionChanged', (v) => (reduceMotion = v));
 
-/** Fades and lifts its children in when first shown. */
+/**
+ * Fades its children in when they first appear, e.g. a food just added to a meal.
+ * Used for content that answers an action, not as a decoration on every section.
+ */
 export function FadeIn({ children, delay = 0, style }: { children: ReactNode; delay?: number; style?: StyleProp<ViewStyle> }) {
   const v = useRef(new Animated.Value(reduceMotion ? 1 : 0)).current;
   useEffect(() => {
-    Animated.timing(v, { toValue: 1, duration: motion.slow, delay, easing: Easing.out(Easing.cubic), useNativeDriver: native }).start();
+    Animated.timing(v, { toValue: 1, duration: motion.base, delay, easing: ease.out, useNativeDriver: native }).start();
   }, [v, delay]);
   return (
-    <Animated.View style={[style, { opacity: v, transform: [{ translateY: v.interpolate({ inputRange: [0, 1], outputRange: [8, 0] }) }] }]}>
+    <Animated.View style={[style, { opacity: v, transform: [{ translateY: v.interpolate({ inputRange: [0, 1], outputRange: [6, 0] }) }] }]}>
       {children}
     </Animated.View>
   );
 }
 
-/** A Pressable that shrinks slightly while pressed. */
+/** A Pressable that shrinks to 0.97 while pressed (140 ms, strong ease-out), so every press feels heard. */
 export function PressScale({ children, style, onPressIn, onPressOut, ...rest }: PressableProps & { style?: StyleProp<ViewStyle>; children: ReactNode }) {
   const scale = useRef(new Animated.Value(1)).current;
-  const to = (value: number) => Animated.spring(scale, { toValue: value, useNativeDriver: native, speed: 50, bounciness: 0 }).start();
+  const to = (value: number) => Animated.timing(scale, { toValue: value, duration: motion.press, easing: ease.out, useNativeDriver: native }).start();
   return (
     <Pressable
       {...rest}
@@ -51,8 +55,9 @@ export function Pop({ trigger, children }: { trigger: unknown; children: ReactNo
   const first = useRef(true);
   useEffect(() => {
     if (first.current) { first.current = false; return; }
-    s.setValue(0.8);
-    Animated.spring(s, { toValue: 1, useNativeDriver: native, speed: 18, bounciness: 14 }).start();
+    if (reduceMotion) return;
+    s.setValue(0.9); // never from 0: nothing real appears from nothing
+    Animated.spring(s, { toValue: 1, useNativeDriver: native, speed: 22, bounciness: 6 }).start();
   }, [trigger, s]);
   return <Animated.View style={{ transform: [{ scale: s }] }}>{children}</Animated.View>;
 }
@@ -65,8 +70,8 @@ export function TypingDots() {
       Animated.loop(
         Animated.sequence([
           Animated.delay(i * 140),
-          Animated.timing(d, { toValue: 1, duration: 280, useNativeDriver: native }),
-          Animated.timing(d, { toValue: 0, duration: 280, useNativeDriver: native }),
+          Animated.timing(d, { toValue: 1, duration: 280, easing: ease.inOut, useNativeDriver: native }),
+          Animated.timing(d, { toValue: 0, duration: 280, easing: ease.inOut, useNativeDriver: native }),
           Animated.delay((2 - i) * 140),
         ]),
       ),
@@ -98,8 +103,9 @@ export function ToastProvider({ children }: { children: ReactNode }) {
     (m: string) => {
       setMsg(m);
       if (timer.current) clearTimeout(timer.current);
-      Animated.spring(v, { toValue: 1, useNativeDriver: native, speed: 20, bounciness: 8 }).start();
-      timer.current = setTimeout(() => Animated.timing(v, { toValue: 0, duration: motion.base, useNativeDriver: native }).start(), 2000);
+      // Enters with a strong ease-out, leaves faster than it came, from the same edge.
+      Animated.timing(v, { toValue: 1, duration: motion.base, easing: ease.out, useNativeDriver: native }).start();
+      timer.current = setTimeout(() => Animated.timing(v, { toValue: 0, duration: motion.fast, easing: ease.out, useNativeDriver: native }).start(), 2200);
     },
     [v],
   );
@@ -110,7 +116,7 @@ export function ToastProvider({ children }: { children: ReactNode }) {
         pointerEvents="none"
         style={{
           position: 'absolute', left: 16, right: 16, top: insets.top + 8, alignItems: 'center',
-          opacity: v, transform: [{ translateY: v.interpolate({ inputRange: [0, 1], outputRange: [-20, 0] }) }],
+          opacity: v, transform: [{ translateY: v.interpolate({ inputRange: [0, 1], outputRange: [-16, 0] }) }],
         }}
       >
         <View style={{ backgroundColor: t.ink, paddingVertical: 12, paddingHorizontal: 18, borderRadius: radius.pill }} accessibilityLiveRegion="polite">

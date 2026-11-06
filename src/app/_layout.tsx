@@ -1,6 +1,7 @@
 import {
   PlusJakartaSans_400Regular, PlusJakartaSans_500Medium, PlusJakartaSans_600SemiBold, PlusJakartaSans_700Bold, PlusJakartaSans_800ExtraBold, useFonts,
 } from '@expo-google-fonts/plus-jakarta-sans';
+import { BricolageGrotesque_500Medium, BricolageGrotesque_700Bold, BricolageGrotesque_800ExtraBold } from '@expo-google-fonts/bricolage-grotesque';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { StatusBar } from 'expo-status-bar';
 import { Tabs } from 'expo-router/js-tabs';
@@ -19,6 +20,7 @@ const ICONS: Record<string, IconName> = { index: 'home', log: 'add-circle', reci
 export default function RootLayout() {
   const [fontsReady] = useFonts({
     PlusJakartaSans_400Regular, PlusJakartaSans_500Medium, PlusJakartaSans_600SemiBold, PlusJakartaSans_700Bold, PlusJakartaSans_800ExtraBold,
+    BricolageGrotesque_500Medium, BricolageGrotesque_700Bold, BricolageGrotesque_800ExtraBold,
     ...Ionicons.font,
   });
   return (
@@ -48,7 +50,7 @@ function Gate({ fontsReady }: { fontsReady: boolean }) {
       screenOptions={({ route }) => ({
         headerShown: false,
         animation: 'shift',
-        tabBarActiveTintColor: t.accent,
+        tabBarActiveTintColor: t.ink,
         tabBarInactiveTintColor: t.muted,
         tabBarStyle: { backgroundColor: t.surface, borderTopColor: t.line, height: 70 + insets.bottom, paddingTop: 4, paddingBottom: insets.bottom + 6 },
         tabBarLabelStyle: { ...font(600), fontSize: 12, lineHeight: 16 },

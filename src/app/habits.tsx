@@ -46,15 +46,17 @@ export default function Habits() {
               <Text style={[type.caption, { color: t.heroMuted }]} numberOfLines={2}>{tr('habits.count', { d: doneCount, n: profile.habits.length })}</Text>
             </View>
           </View>
-          <View style={{ width: 112, backgroundColor: t.surface, borderWidth: 1, borderColor: t.line, borderRadius: radius.lg, padding: space.lg, justifyContent: 'center', gap: 2 }}>
+          <View style={{ width: 112, backgroundColor: t.surface, borderRadius: radius.lg, padding: space.lg, justifyContent: 'center', gap: 2 }}>
             <Icon name="flame" size={24} color={t.streak} />
             <Text style={[type.number, { fontSize: 24, color: t.ink }]}>{best}d</Text>
           </View>
         </View>
       </FadeIn>
 
-      <View style={styles.rowBetween}>
-        <View style={{ flexDirection: 'row', gap: 6, paddingLeft: TOUCH + space.md + space.lg }}>
+      {profile.habits.length === 0 ? <Card><Empty icon="checkmark-circle-outline" text={tr('habits.empty')} /></Card> : null}
+      <View style={[styles.sheet, { backgroundColor: t.surface, display: profile.habits.length ? 'flex' : 'none' }]}>
+      <View style={[styles.rowBetween, { paddingHorizontal: space.lg, paddingTop: space.sm }]}>
+        <View style={{ flexDirection: 'row', gap: 6, paddingLeft: TOUCH + space.md }} accessibilityElementsHidden importantForAccessibility="no-hide-descendants">
           {week.map((k) => (
             <Text key={k} style={[type.caption, { width: 12, textAlign: 'center', color: k === today ? t.accent : t.muted }]}>{letter(k)}</Text>
           ))}
@@ -62,14 +64,13 @@ export default function Habits() {
         <Button small kind="ghost" icon={editing ? 'checkmark' : 'create-outline'} label={editing ? tr('done') : tr('edit')} onPress={() => setEditing(!editing)} />
       </View>
 
-      {profile.habits.length === 0 ? <Card><Empty icon="checkmark-circle-outline" text={tr('habits.empty')} /></Card> : null}
       {profile.habits.map((h, i) => {
         const on = isDone(h, day, profile);
         const s = streak(h, days, profile);
         const { name: label, note } = habitText(h, tr);
         return (
-          <FadeIn key={h.id} delay={i * 40}>
-            <View style={{ backgroundColor: t.surface, borderRadius: radius.lg, borderWidth: 1, borderColor: on ? t.accent : t.line, padding: space.lg, flexDirection: 'row', alignItems: 'center', gap: space.md }}>
+          <View key={h.id}>
+            <View style={{ borderTopWidth: 1, borderTopColor: t.line, paddingHorizontal: space.lg, paddingVertical: space.md, flexDirection: 'row', alignItems: 'center', gap: space.md }}>
               <Pressable
                 accessibilityRole="checkbox" accessibilityState={{ checked: on, disabled: !!h.auto }} accessibilityLabel={label}
                 disabled={!!h.auto}
@@ -95,7 +96,7 @@ export default function Habits() {
                 <View style={{ flexDirection: 'row', gap: 6 }} accessible accessibilityLabel={`${label}: ${week.filter((k) => isDone(h, days[k], profile)).length}/7`}>
                   {week.map((k) => {
                     const done = isDone(h, days[k], profile);
-                    return <View key={k} style={{ width: 12, height: 12, borderRadius: 4, backgroundColor: done ? t.accent : t.raised, borderWidth: k === today ? 1.5 : 0, borderColor: t.accent }} />;
+                    return <View key={k} style={{ width: 12, height: 12, borderRadius: 4, backgroundColor: done ? t.ink : t.raised, borderWidth: k === today ? 1.5 : 0, borderColor: t.ink }} />;
                   })}
                 </View>
               </View>
@@ -110,9 +111,10 @@ export default function Habits() {
                 </Pop>
               )}
             </View>
-          </FadeIn>
+          </View>
         );
       })}
+      </View>
 
       <View style={{ flexDirection: 'row', gap: space.sm }}>
         <Input

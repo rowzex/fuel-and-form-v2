@@ -8,7 +8,25 @@ Same features and data, new look.
 
 Dark mode: [docs/compare-v1-v2-dark.png](docs/compare-v1-v2-dark.png). Every screen in both themes is in [docs/screens](docs/screens).
 
-## What changed and why
+## Version 2.1: "the plate" (current)
+
+A second pass with four more skills: **frontend-design**, **emil-design-eng**, **vercel-react-native-skills** and **ui-ux-pro-max**. The v2.0 design is kept at the git tag `v2.0`.
+
+![v2.0 vs v2.1](docs/compare-v2.0-v2.1.png)
+
+Dark mode: [docs/compare-v2.0-v2.1-dark.png](docs/compare-v2.0-v2.1-dark.png).
+
+| Area | v2.0 | v2.1 | Skill |
+|---|---|---|---|
+| Idea | Generic green fitness kit | The day drawn as a plate: calories fill the rim, protein, carbs and fat fill three inner arcs | frontend-design: one memorable element, rest quiet |
+| Colour | Green + blue/orange/yellow macros | Aubergine ink and panel, tomato for actions, macros coloured like food (beet, wheat, olive). All text ≥ 4.5:1 | frontend-design: palette from the subject; ui-ux-pro-max: contrast |
+| Type | Plus Jakarta Sans only | Bricolage Grotesque for titles and numbers, Plus Jakarta Sans for reading | frontend-design: type carries personality |
+| Labels | All-caps eyebrows, "A · B · C" strings | Sentence case, no middle dots | frontend-design: avoid template tells |
+| Layout | A bordered card per meal and per habit | One sheet with rows for meals and for habits; flat surfaces, radius by hierarchy | frontend-design: avoid the card kit |
+| Motion | Fade-in on every section, bouncy pops | Only the plate draws in on open; presses scale to 0.97 in 140 ms with a strong ease-out; toasts leave faster than they come; no replaying list staggers; reduced motion respected | emil-design-eng |
+| Performance | Bars animated by width, `Animated.Image` | Bars slide with transform only; photos use `expo-image` with memory and disk cache | vercel-react-native-skills |
+
+## Version 2.0: what changed from Version 1
 
 The skill's guidance for a **Calorie & Nutrition Counter** and a **Habit Tracker** drove these choices:
 
