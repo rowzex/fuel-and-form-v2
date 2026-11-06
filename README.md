@@ -10,7 +10,7 @@ Dark mode: [docs/compare-v1-v2-dark.png](docs/compare-v1-v2-dark.png). Every scr
 
 ## Version 2.1: "the plate" (current)
 
-A second pass with four more skills: **frontend-design**, **emil-design-eng**, **vercel-react-native-skills** and **ui-ux-pro-max**. The v2.0 design is kept at the git tag `v2.0`.
+A second pass with four more skills: **frontend-design**, **emil-design-eng**, **vercel-react-native-skills** and **ui-ux-pro-max**. The v2.0 design is kept on the `v2.0` branch.
 
 ![v2.0 vs v2.1](docs/compare-v2.0-v2.1.png)
 
